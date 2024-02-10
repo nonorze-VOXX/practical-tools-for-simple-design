@@ -49,6 +49,12 @@ void App::Update() {
     }
     if (Util::Input::IsRButtonPressed()) {
         LOG_DEBUG("Right button pressed");
+        auto f = Factory<MyGo>::GetInstance();
+        auto f1 = Factory<MyGo1>::GetInstance();
+        auto go = f1->CreateMyGo();
+        LOG_DEBUG("MyGo: {}", f->M_Gos.size());
+        LOG_DEBUG("MyGo1: {}", f1->M_Gos.size());
+        LOG_DEBUG("World: {}", WorldFactory::GetWorldObjects().size());
     }
     if (Util::Input::IsMButtonPressed()) {
         LOG_DEBUG("Middle button pressed");

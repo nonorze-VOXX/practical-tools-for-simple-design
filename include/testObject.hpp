@@ -16,9 +16,11 @@ public:
     void SetScale(const glm::vec2 &scale);
 };
 class MyGo : public Util::GameObject {
-public:
-    int id;
+    int m_id;
 
+public:
+    void SetId(int id) { m_id = id; }
+    int GetId() { return m_id; }
     // static std::pmr::vector<std::shared_ptr<MyGo>> M_Gos;
 
     // static std::shared_ptr<MyGo> CreateMyGo() {
@@ -28,7 +30,7 @@ public:
     //     return go;
     // }
     void Update(const Util::Transform &transform = Util::Transform()) override {
-        LOG_DEBUG("MyGo: {}", id);
+        LOG_DEBUG("MyGo: {}", m_id);
     }
     void Start() override {}
 };
@@ -50,8 +52,47 @@ public:
         return m_instance;
     }
 };
+class WorldFactory {
+private:
+    static inline std::pmr::vector<std::shared_ptr<MyGo>> worldObjects =
+        std::pmr::vector<std::shared_ptr<MyGo>>();
+
+    static bool compareMyGoWithId(const std::shared_ptr<MyGo> &a,
+                                  const std::shared_ptr<MyGo> &b) {
+        return a->GetId() < b->GetId();
+    }
+
+protected:
+    static int GetUnusedId() {
+        auto id = 0;
+        for (auto &go : worldObjects) {
+            if (go->GetId() == id)
+                id++;
+            else
+                break;
+        }
+        return id;
+    }
+
+public:
+    static std::pmr::vector<std::shared_ptr<MyGo>> GetWorldObjects() {
+        return worldObjects;
+    }
+    static void AddWorldObject(std::shared_ptr<MyGo> go) {
+        worldObjects.push_back(go);
+        go->SetId(GetUnusedId());
+        std::sort(worldObjects.begin(), worldObjects.end(), compareMyGoWithId);
+    }
+    static void RemoveWorldObject(std::shared_ptr<MyGo> go) {
+        worldObjects.erase(
+            std::remove(worldObjects.begin(), worldObjects.end(), go),
+            worldObjects.end());
+    }
+};
 template <class T = MyGo>
-class Factory : public Singleton<Factory<T>>, public Initable {
+class Factory : public Singleton<Factory<T>>,
+                public Initable,
+                public WorldFactory {
 
 public:
     void Init() override { M_Gos = std::pmr::vector<std::shared_ptr<T>>(); };
@@ -59,10 +100,12 @@ public:
 
     std::shared_ptr<T> CreateMyGo() {
         auto go = std::make_shared<T>();
-        go->id = M_Gos.size();
         M_Gos.push_back(go);
+        AddWorldObject(go);
+
         return go;
     }
 };
+class MyGo1 : public MyGo {};
 
 #endif
