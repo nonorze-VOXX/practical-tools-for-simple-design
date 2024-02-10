@@ -15,7 +15,7 @@ public:
     void SetPostion(const glm::vec2 &position);
     void SetScale(const glm::vec2 &scale);
 };
-class MyGo : public Util::GameObject {
+class Component : public Util::GameObject {
     int m_id;
 
 public:
@@ -54,11 +54,11 @@ public:
 };
 class WorldFactory {
 private:
-    static inline std::pmr::vector<std::shared_ptr<MyGo>> worldObjects =
-        std::pmr::vector<std::shared_ptr<MyGo>>();
+    static inline std::pmr::vector<std::shared_ptr<Component>> worldObjects =
+        std::pmr::vector<std::shared_ptr<Component>>();
 
-    static bool compareMyGoWithId(const std::shared_ptr<MyGo> &a,
-                                  const std::shared_ptr<MyGo> &b) {
+    static bool compareMyGoWithId(const std::shared_ptr<Component> &a,
+                                  const std::shared_ptr<Component> &b) {
         return a->GetId() < b->GetId();
     }
 
@@ -75,21 +75,21 @@ protected:
     }
 
 public:
-    static std::pmr::vector<std::shared_ptr<MyGo>> GetWorldObjects() {
+    static std::pmr::vector<std::shared_ptr<Component>> GetWorldObjects() {
         return worldObjects;
     }
-    static void AddWorldObject(std::shared_ptr<MyGo> go) {
+    static void AddWorldObject(std::shared_ptr<Component> go) {
         worldObjects.push_back(go);
         go->SetId(GetUnusedId());
         std::sort(worldObjects.begin(), worldObjects.end(), compareMyGoWithId);
     }
-    static void RemoveWorldObject(std::shared_ptr<MyGo> go) {
+    static void RemoveWorldObject(std::shared_ptr<Component> go) {
         worldObjects.erase(
             std::remove(worldObjects.begin(), worldObjects.end(), go),
             worldObjects.end());
     }
 };
-template <class T = MyGo>
+template <class T>
 class Factory : public Singleton<Factory<T>>,
                 public Initable,
                 public WorldFactory {
@@ -98,7 +98,7 @@ public:
     void Init() override { M_Gos = std::pmr::vector<std::shared_ptr<T>>(); };
     std::pmr::vector<std::shared_ptr<T>> M_Gos;
 
-    std::shared_ptr<T> CreateMyGo() {
+    std::shared_ptr<T> Create() {
         auto go = std::make_shared<T>();
         M_Gos.push_back(go);
         AddWorldObject(go);
@@ -106,6 +106,6 @@ public:
         return go;
     }
 };
-class MyGo1 : public MyGo {};
+class MyGo1 : public Component {};
 
 #endif

@@ -43,15 +43,15 @@ void App::Update() {
     auto cursorPos = Util::Input::GetCursorPosition();
     if (Util::Input::IsLButtonPressed()) {
         LOG_DEBUG("Left button pressed");
-        auto f = Factory<MyGo>::GetInstance();
-        auto go = f->CreateMyGo();
+        auto f = Factory<Component>::GetInstance();
+        auto go = f->Create();
         LOG_DEBUG("MyGo: {}", f->M_Gos.size());
     }
     if (Util::Input::IsRButtonPressed()) {
         LOG_DEBUG("Right button pressed");
-        auto f = Factory<MyGo>::GetInstance();
+        auto f = Factory<Component>::GetInstance();
         auto f1 = Factory<MyGo1>::GetInstance();
-        auto go = f1->CreateMyGo();
+        auto go = f1->Create();
         LOG_DEBUG("MyGo: {}", f->M_Gos.size());
         LOG_DEBUG("MyGo1: {}", f1->M_Gos.size());
         LOG_DEBUG("World: {}", WorldFactory::GetWorldObjects().size());
