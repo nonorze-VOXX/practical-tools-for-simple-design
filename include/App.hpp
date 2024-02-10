@@ -4,6 +4,9 @@
 #include "pch.hpp" // IWYU pragma: export
 
 #include "Giraffe.hpp"
+#include "testObject.hpp"
+#include <memory>
+#include <vector>
 
 class App {
 public:
@@ -21,8 +24,12 @@ public:
 
 private:
     State m_CurrentState = State::START;
+    float gridWidth = 100;
 
-    std::shared_ptr<Giraffe> m_Giraffe = std::make_shared<Giraffe>();
+    // std::shared_ptr<Giraffe> m_Giraffe = std::make_shared<Giraffe>();
+    // std::shared_ptr<TestObject> test;
+    std::pmr::vector<std::shared_ptr<TestObject>> gridMap =
+        std::pmr::vector<std::shared_ptr<TestObject>>();
 };
 
 #endif

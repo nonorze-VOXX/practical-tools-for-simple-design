@@ -22,6 +22,4 @@ void GiraffeText::Update(const Util::Transform &transform) {
     m_Text->SetColor({1, 0, 0, 1});
 
     // LOG_DEBUG("{} {}", scale.x, scale.y);
-
-    m_Drawable->Draw(m_Transform, m_ZIndex);
 }

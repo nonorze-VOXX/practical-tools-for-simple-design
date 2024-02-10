@@ -6,24 +6,41 @@
 #include "Util/Logger.hpp"
 
 #include "GiraffeText.hpp"
+#include "testObject.hpp"
+#include <algorithm>
+#include <cmath>
+#include <memory>
 
+std::shared_ptr<TestObject> MakeObject(float gridWidth) {
+    auto test = std::make_shared<TestObject>();
+    test->SetDrawable(
+        std::make_shared<Util::Image>("../assets/sprites/giraffe.png"));
+    test->Start();
+    test->SetScale(gridWidth / test->GetScaledSize());
+    return test;
+}
 void App::Start() {
     LOG_TRACE("Start");
 
-    m_Giraffe->SetDrawable(
-        std::make_shared<Util::Image>("../assets/sprites/giraffe.png"));
-    m_Giraffe->SetZIndex(5);
-    m_Giraffe->Start();
+    // m_Giraffe->SetDrawable(
+    //     std::make_shared<Util::Image>("../assets/sprites/giraffe.png"));
+    // m_Giraffe->SetZIndex(5);
+    // m_Giraffe->Start();
 
-    auto gf = std::make_shared<GiraffeText>("../assets/fonts/Inter.ttf", 50);
-    gf->SetZIndex(m_Giraffe->GetZIndex() - 1);
-    gf->Start();
-    m_Giraffe->AddChild(gf);
+    // auto gf = std::make_shared<GiraffeText>("../assets/fonts/Inter.ttf", 50);
+    // gf->SetZIndex(m_Giraffe->GetZIndex() - 1);
+    // gf->Start();
+    // m_Giraffe->AddChild(gf);
+    auto test = MakeObject(gridWidth);
+    gridMap.push_back(test);
 
     m_CurrentState = State::UPDATE;
 }
 
 void App::Update() {
+    // test->AddChild(m_Giraffe);
+
+    auto cursorPos = Util::Input::GetCursorPosition();
     if (Util::Input::IsLButtonPressed()) {
         LOG_DEBUG("Left button pressed");
     }
@@ -53,8 +70,12 @@ void App::Update() {
         LOG_DEBUG("B");
         Util::Input::SetCursorPosition({0.0F, 0.0F});
     }
+    std::for_each(gridMap.begin(), gridMap.end(), [](auto &obj) {
+        // obj->Update();
+        obj->Draw();
+    });
 
-    m_Giraffe->Update();
+    // m_Giraffe->Update();
 }
 
 void App::End() { // NOLINT(this method will mutate members in the future)
