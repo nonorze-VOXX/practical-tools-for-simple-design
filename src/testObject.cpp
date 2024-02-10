@@ -8,3 +8,6 @@ void TestObject::SetPostion(const glm::vec2 &position) {
 void TestObject::SetScale(const glm::vec2 &scale) {
     m_Transform.scale = scale;
 }
+
+// std::pmr::vector<std::shared_ptr<MyGo>> MyGo::M_Gos =
+//     std::pmr::vector<std::shared_ptr<MyGo>>();

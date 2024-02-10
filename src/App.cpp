@@ -43,6 +43,9 @@ void App::Update() {
     auto cursorPos = Util::Input::GetCursorPosition();
     if (Util::Input::IsLButtonPressed()) {
         LOG_DEBUG("Left button pressed");
+        auto f = Factory<MyGo>::GetInstance();
+        auto go = f->CreateMyGo();
+        LOG_DEBUG("MyGo: {}", f->M_Gos.size());
     }
     if (Util::Input::IsRButtonPressed()) {
         LOG_DEBUG("Right button pressed");
