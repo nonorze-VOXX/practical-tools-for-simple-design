@@ -9,20 +9,19 @@
 #include "testObject.hpp"
 #include <algorithm>
 #include <cmath>
+#include <glm/fwd.hpp>
 #include <memory>
 
 void App::Start() {
     LOG_TRACE("Start");
-
-    // m_Giraffe->SetDrawable(
-    //     std::make_shared<Util::Image>("../assets/sprites/giraffe.png"));
-    // m_Giraffe->SetZIndex(5);
-    // m_Giraffe->Start();
-
-    // auto gf = std::make_shared<GiraffeText>("../assets/fonts/Inter.ttf", 50);
-    // gf->SetZIndex(m_Giraffe->GetZIndex() - 1);
-    // gf->Start();
-    // m_Giraffe->AddChild(gf);
+    for (int i = -10; i < 10; i++) {
+        for (int ii = -10; ii < 10; ii++) {
+            auto f = Factory<Converyor>::GetInstance();
+            auto go = f->Create();
+            go->SetPostion({i * gridWidth, ii * gridWidth});
+            go->SetScale(gridWidth / go->GetScaledSize());
+        }
+    }
 
     m_CurrentState = State::UPDATE;
 }
@@ -33,10 +32,13 @@ void App::Update() {
     auto cursorPos = Util::Input::GetCursorPosition();
     if (Util::Input::IsLButtonPressed()) {
         LOG_DEBUG("Left button pressed");
-        auto f = Factory<Component>::GetInstance();
+        auto f = Factory<Plate>::GetInstance();
         auto go = f->Create();
-        go->SetPostion(cursorPos);
-        LOG_DEBUG("MyGo: {}", f->M_Gos.size());
+        auto t = round(cursorPos / gridWidth) * gridWidth;
+        go->SetPostion(t);
+        go->SetScale(gridWidth / go->GetScaledSize());
+        go->SetZIndex(5);
+        LOG_DEBUG("MyGo: {}", f->GetList().size());
     }
     if (Util::Input::IsRButtonPressed()) {
         LOG_DEBUG("Right button pressed");
@@ -65,6 +67,8 @@ void App::Update() {
         Util::Input::SetCursorPosition({0.0F, 0.0F});
     }
     WorldFactory::Update();
+    ConveryorCarryPlate(Factory<Plate>::GetInstance()->GetList(),
+                        Factory<Converyor>::GetInstance()->GetList());
     WorldFactory::Draw();
 
     // m_Giraffe->Update();
@@ -72,4 +76,19 @@ void App::Update() {
 
 void App::End() { // NOLINT(this method will mutate members in the future)
     LOG_TRACE("End");
+}
+
+void App::ConveryorCarryPlate(
+    std::pmr::vector<std::shared_ptr<Plate>> plate,
+    std::pmr::vector<std::shared_ptr<Converyor>> converyor) {
+    float speed = 1;
+    for (auto &p : plate) {
+        for (auto &c : converyor) {
+            auto platePos = ConvertPositionToGrid(p->GetPostion());
+            auto converyorPos = ConvertPositionToGrid(c->GetPostion());
+            if (platePos == converyorPos) {
+                p->SetPostion(p->GetPostion() + glm::vec2(0, speed));
+            }
+        }
+    }
 }

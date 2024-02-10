@@ -14,10 +14,10 @@ class Component : public Util::GameObject {
 public:
     void SetId(int id) { m_id = id; }
     void SetPostion(const glm::vec2 &position);
+    const glm::vec2 GetPostion() { return m_Transform.translation; };
     void SetScale(const glm::vec2 &scale);
     int GetId() { return m_id; }
     void Update(const Util::Transform &transform = Util::Transform()) override {
-        LOG_DEBUG("MyGo: {}", m_id);
     }
     void Start() override {
         SetDrawable(
@@ -91,23 +91,33 @@ public:
         }
     }
 };
-template <class T>
+template <class T = Component>
 class Factory : public Singleton<Factory<T>>,
                 public Initable,
                 public WorldFactory {
 
+    std::pmr::vector<std::shared_ptr<T>> m_components;
+
 public:
-    void Init() override { M_Gos = std::pmr::vector<std::shared_ptr<T>>(); };
-    std::pmr::vector<std::shared_ptr<T>> M_Gos;
+    std::pmr::vector<std::shared_ptr<T>> GetList() { return m_components; };
+
+    void Init() override {
+        m_components = std::pmr::vector<std::shared_ptr<T>>();
+    };
 
     std::shared_ptr<T> Create() {
         auto go = std::make_shared<T>();
-        M_Gos.push_back(go);
+        m_components.push_back(go);
         AddWorldObject(go);
 
         return go;
     }
 };
-class MyGo1 : public Component {};
-
+class Converyor : public Component {
+    void Start() override {
+        SetDrawable(
+            std::make_unique<Util::Image>("../assets/sprites/conveyor.bmp"));
+    }
+};
+class Plate : public Component {};
 #endif
