@@ -11,14 +11,6 @@
 #include <cmath>
 #include <memory>
 
-std::shared_ptr<TestObject> MakeObject(float gridWidth) {
-    auto test = std::make_shared<TestObject>();
-    test->SetDrawable(
-        std::make_shared<Util::Image>("../assets/sprites/giraffe.png"));
-    test->Start();
-    test->SetScale(gridWidth / test->GetScaledSize());
-    return test;
-}
 void App::Start() {
     LOG_TRACE("Start");
 
@@ -31,8 +23,6 @@ void App::Start() {
     // gf->SetZIndex(m_Giraffe->GetZIndex() - 1);
     // gf->Start();
     // m_Giraffe->AddChild(gf);
-    auto test = MakeObject(gridWidth);
-    gridMap.push_back(test);
 
     m_CurrentState = State::UPDATE;
 }
@@ -45,16 +35,11 @@ void App::Update() {
         LOG_DEBUG("Left button pressed");
         auto f = Factory<Component>::GetInstance();
         auto go = f->Create();
+        go->SetPostion(cursorPos);
         LOG_DEBUG("MyGo: {}", f->M_Gos.size());
     }
     if (Util::Input::IsRButtonPressed()) {
         LOG_DEBUG("Right button pressed");
-        auto f = Factory<Component>::GetInstance();
-        auto f1 = Factory<MyGo1>::GetInstance();
-        auto go = f1->Create();
-        LOG_DEBUG("MyGo: {}", f->M_Gos.size());
-        LOG_DEBUG("MyGo1: {}", f1->M_Gos.size());
-        LOG_DEBUG("World: {}", WorldFactory::GetWorldObjects().size());
     }
     if (Util::Input::IsMButtonPressed()) {
         LOG_DEBUG("Middle button pressed");
@@ -79,10 +64,8 @@ void App::Update() {
         LOG_DEBUG("B");
         Util::Input::SetCursorPosition({0.0F, 0.0F});
     }
-    std::for_each(gridMap.begin(), gridMap.end(), [](auto &obj) {
-        // obj->Update();
-        obj->Draw();
-    });
+    WorldFactory::Update();
+    WorldFactory::Draw();
 
     // m_Giraffe->Update();
 }

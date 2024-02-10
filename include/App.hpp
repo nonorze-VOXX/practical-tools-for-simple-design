@@ -28,8 +28,6 @@ private:
 
     // std::shared_ptr<Giraffe> m_Giraffe = std::make_shared<Giraffe>();
     // std::shared_ptr<TestObject> test;
-    std::pmr::vector<std::shared_ptr<TestObject>> gridMap =
-        std::pmr::vector<std::shared_ptr<TestObject>>();
 };
 
 #endif

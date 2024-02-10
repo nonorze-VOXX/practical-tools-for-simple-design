@@ -8,31 +8,21 @@
 #include <glm/fwd.hpp>
 #include <memory>
 #include <vector>
-class TestObject : public Util::GameObject {
-public:
-    void Start() override;
-    void Update(const Util::Transform &transform = Util::Transform()) override;
-    void SetPostion(const glm::vec2 &position);
-    void SetScale(const glm::vec2 &scale);
-};
 class Component : public Util::GameObject {
     int m_id;
 
 public:
     void SetId(int id) { m_id = id; }
+    void SetPostion(const glm::vec2 &position);
+    void SetScale(const glm::vec2 &scale);
     int GetId() { return m_id; }
-    // static std::pmr::vector<std::shared_ptr<MyGo>> M_Gos;
-
-    // static std::shared_ptr<MyGo> CreateMyGo() {
-    //     auto go = std::make_shared<MyGo>();
-    //     go->id = M_Gos.size();
-    //     M_Gos.push_back(go);
-    //     return go;
-    // }
     void Update(const Util::Transform &transform = Util::Transform()) override {
         LOG_DEBUG("MyGo: {}", m_id);
     }
-    void Start() override {}
+    void Start() override {
+        SetDrawable(
+            std::make_unique<Util::Image>("../assets/sprites/giraffe.png"));
+    }
 };
 class Initable {
 public:
@@ -81,12 +71,24 @@ public:
     static void AddWorldObject(std::shared_ptr<Component> go) {
         worldObjects.push_back(go);
         go->SetId(GetUnusedId());
+        go->Start();
         std::sort(worldObjects.begin(), worldObjects.end(), compareMyGoWithId);
     }
     static void RemoveWorldObject(std::shared_ptr<Component> go) {
         worldObjects.erase(
             std::remove(worldObjects.begin(), worldObjects.end(), go),
             worldObjects.end());
+    }
+    static void Draw() {
+        for (auto &go : worldObjects) {
+            go->Draw();
+        }
+    }
+
+    static void Update() {
+        for (auto &go : worldObjects) {
+            go->Update();
+        }
     }
 };
 template <class T>
