@@ -4,6 +4,9 @@
 
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
+#include "Util/Logger.hpp"
+#include "Util/Time.hpp"
+#include <cmath>
 #include <glm/detail/qualifier.hpp>
 #include <glm/fwd.hpp>
 #include <memory>
@@ -26,14 +29,13 @@ inline glm::vec2 DirectionToVec2(Direction direction) {
         return {1, 0};
     }
 }
-inline float DirectionToRotation(Direction direction) {
+inline float DirectionToAngle(Direction direction) {
     auto vec = DirectionToVec2(direction);
-    return vec.x * -90 + vec.y * ((-1) + vec.y) * 90;
+    return vec.y * 90 + vec.x * ((-1) + vec.x) * 90;
 }
-// 1 0 -> 270
-// -1 0 -> 90
-// 0 1 -> 0
-// 0 -1 -> 180
+inline glm::vec2 AngleToVec2(float angle) {
+    return {cos(angle / 180 * acos(-1)), sin(angle / 180 * acos(-1))};
+}
 class Component : public Util::GameObject {
     int m_id;
 
@@ -150,7 +152,7 @@ public:
     //     : m_direction(direction) {}
     void SetDirection(Direction direction) {
         m_direction = direction;
-        SetRotation(DirectionToRotation(direction));
+        SetRotation(DirectionToAngle(direction));
     }
     Direction GetDirection() { return m_direction; }
     void Start() override {
@@ -166,19 +168,40 @@ public:
     void SetState(PlateState state) { m_state = state; }
     PlateState GetState() { return m_state; }
 };
+enum class ArmState { IDLE, CARRYING };
 class Arm : public Component {
     Direction m_direction;
+    ArmState m_state = ArmState::IDLE;
     std::pmr::set<std::shared_ptr<Plate>> m_context =
         std::pmr::set<std::shared_ptr<Plate>>();
+    float carryingTime = 1;
+    float carryingTimer = 0;
 
 public:
+    void ResetTimer() { carryingTimer = 0; }
+    // float GetTimer() { return carryingTimer; }
+
+    bool IsTimerEnd() { return carryingTimer > carryingTime; }
+    void Update(const Util::Transform &transform = Util::Transform()) override {
+        if (m_state == ArmState::CARRYING && carryingTimer < carryingTime) {
+            carryingTimer += Util::Time::GetDeltaTime();
+        }
+    }
+    void SetState(ArmState state) { m_state = state; }
+    ArmState GetState() { return m_state; }
     void CarryUp(std::shared_ptr<Plate> go) { m_context.insert(go); }
     void CarryDown(std::shared_ptr<Plate> go) { m_context.erase(go); }
     void SetDirection(Direction direction) {
         m_direction = direction;
-        SetRotation(DirectionToRotation(direction));
+        SetRotation(DirectionToAngle(direction));
+    }
+    glm::vec2 GetHandPosition() {
+        auto p = 50.0F * AngleToVec2(DirectionToAngle(m_direction) + 180 +
+                                     180 * (carryingTimer / carryingTime));
+        return GetPostion() + p;
     }
     Direction GetDirection() { return m_direction; }
+    std::pmr::set<std::shared_ptr<Plate>> GetCarrying() { return m_context; }
 };
 // class Box : public Component {
 //     std::pmr::vector<std::shared_ptr<Component>> m_context =

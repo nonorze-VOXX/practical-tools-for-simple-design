@@ -23,10 +23,10 @@ public:
     void Start();
     void Update();
     void End(); // NOLINT(readability-convert-member-functions-to-static)
+    static inline float gridWidth = 50;
 
 private:
     State m_CurrentState = State::START;
-    float gridWidth = 50;
 
     // std::shared_ptr<Giraffe> m_Giraffe = std::make_shared<Giraffe>();
     // std::shared_ptr<TestObject> test;
@@ -37,6 +37,7 @@ private:
                        std::pmr::vector<std::shared_ptr<Arm>> converyor);
     glm::vec2 PositionToGrid(glm::vec2 pos) { return round(pos / gridWidth); };
     glm::vec2 GridToPosition(glm::vec2 grid) { return grid * gridWidth; };
+    void ArmCarrying(std::pmr::vector<std::shared_ptr<Arm>> arm);
 };
 
 #endif

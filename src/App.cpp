@@ -107,16 +107,14 @@ void App::Start() {
             case MapObjectType::BOX:
                 break;
             }
-            LOG_DEBUG("x: {}, y: {}", x, y);
-            LOG_DEBUG("test {} {}", i, ii);
         }
     }
 
     m_CurrentState = State::UPDATE;
-    LOG_DEBUG(DirectionToRotation(Direction::UP));
-    LOG_DEBUG(DirectionToRotation(Direction::DOWN));
-    LOG_DEBUG(DirectionToRotation(Direction::RIGHT));
-    LOG_DEBUG(DirectionToRotation(Direction::LEFT));
+    LOG_DEBUG(DirectionToAngle(Direction::UP));
+    LOG_DEBUG(DirectionToAngle(Direction::DOWN));
+    LOG_DEBUG(DirectionToAngle(Direction::RIGHT));
+    LOG_DEBUG(DirectionToAngle(Direction::LEFT));
 }
 
 void App::Update() {
@@ -172,6 +170,7 @@ void App::Update() {
                         Factory<Converyor>::GetInstance()->GetList());
     ArmCarryPlate(Factory<Plate>::GetInstance()->GetList(),
                   Factory<Arm>::GetInstance()->GetList());
+    ArmCarrying(Factory<Arm>::GetInstance()->GetList());
     WorldFactory::Draw();
 
     // m_Giraffe->Update();
@@ -186,6 +185,8 @@ void App::ConveryorCarryPlate(
     std::pmr::vector<std::shared_ptr<Converyor>> converyor) {
     float speed = 1;
     for (auto &p : plate) {
+        if (p->GetState() == PlateState::CARRYING)
+            continue;
         for (auto &c : converyor) {
             auto platePos = PositionToGrid(p->GetPostion());
             auto converyorPos = PositionToGrid(c->GetPostion());
@@ -200,11 +201,35 @@ void App::ConveryorCarryPlate(
 void App::ArmCarryPlate(std::pmr::vector<std::shared_ptr<Plate>> plate,
                         std::pmr::vector<std::shared_ptr<Arm>> arm) {
     for (auto &p : plate) {
+        if (p->GetState() == PlateState::CARRYING)
+            continue;
+
         for (auto &c : arm) {
+            if (c->GetState() == ArmState::CARRYING)
+                continue;
             auto platePos = PositionToGrid(p->GetPostion());
             auto armPos = PositionToGrid(c->GetPostion());
-            if (platePos == armPos - glm::vec2(1, 0)) {
-                p->SetPostion(GridToPosition(armPos + glm::vec2(1, 0)));
+            if (platePos == armPos - DirectionToVec2(c->GetDirection())) {
+                p->SetState(PlateState::CARRYING);
+                c->SetState(ArmState::CARRYING);
+                c->CarryUp(p);
+                // p->SetPostion(GridToPosition(
+                //     armPos + DirectionToVec2(c->GetDirection())));
+            }
+        }
+    }
+}
+void App::ArmCarrying(std::pmr::vector<std::shared_ptr<Arm>> arm) {
+    for (auto &a : arm) {
+        if (a->GetState() == ArmState::CARRYING) {
+            auto plate = a->GetCarrying();
+            std::for_each(plate.begin(), plate.end(), [&](auto &p) {
+                p->SetPostion(a->GetHandPosition());
+            });
+            if (a->IsTimerEnd()) {
+
+                a->SetState(ArmState::IDLE);
+                a->ResetTimer();
             }
         }
     }
