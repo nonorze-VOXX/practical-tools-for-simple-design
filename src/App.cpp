@@ -15,6 +15,7 @@
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <vector>
+// issue conveyor know next and precius
 enum class MapObjectType { ARM, CONVERYOR, BOX, NONE };
 struct MapObject {
     MapObjectType type;
@@ -171,6 +172,8 @@ void App::Update() {
     ArmCarryPlate(Factory<Plate>::GetInstance()->GetList(),
                   Factory<Arm>::GetInstance()->GetList());
     ArmCarrying(Factory<Arm>::GetInstance()->GetList());
+    PlateWaitting(Factory<Plate>::GetInstance()->GetList(),
+                  Factory<Arm>::GetInstance()->GetList());
     WorldFactory::Draw();
 
     // m_Giraffe->Update();
@@ -185,7 +188,7 @@ void App::ConveryorCarryPlate(
     std::pmr::vector<std::shared_ptr<Converyor>> converyor) {
     float speed = 1;
     for (auto &p : plate) {
-        if (p->GetState() == PlateState::CARRYING)
+        if (p->GetState() != PlateState::IDLE)
             continue;
         for (auto &c : converyor) {
             auto platePos = PositionToGrid(p->GetPostion());
@@ -201,11 +204,11 @@ void App::ConveryorCarryPlate(
 void App::ArmCarryPlate(std::pmr::vector<std::shared_ptr<Plate>> plate,
                         std::pmr::vector<std::shared_ptr<Arm>> arm) {
     for (auto &p : plate) {
-        if (p->GetState() == PlateState::CARRYING)
+        if (p->GetState() != PlateState::IDLE)
             continue;
 
         for (auto &c : arm) {
-            if (c->GetState() == ArmState::CARRYING)
+            if (c->GetState() != ArmState::IDLE)
                 continue;
             auto platePos = PositionToGrid(p->GetPostion());
             auto armPos = PositionToGrid(c->GetPostion());
@@ -227,9 +230,36 @@ void App::ArmCarrying(std::pmr::vector<std::shared_ptr<Arm>> arm) {
                 p->SetPostion(a->GetHandPosition());
             });
             if (a->IsTimerEnd()) {
+                a->SetState(ArmState::WAITING);
+                // a->ResetTimer();
+            }
+        }
+    }
+}
 
-                a->SetState(ArmState::IDLE);
-                a->ResetTimer();
+void App::PlateWaitting(std::pmr::vector<std::shared_ptr<Plate>> plate,
+                        std::pmr::vector<std::shared_ptr<Arm>> arm) {
+    for (auto &c : arm) {
+        if (c->GetState() != ArmState::WAITING)
+            continue;
+        bool isGroundHavePlate = false;
+        for (auto &p : plate) {
+            if (p->GetState() != PlateState::IDLE)
+                continue;
+            auto platePos = PositionToGrid(p->GetPostion());
+            auto armPos = PositionToGrid(c->GetHandPosition());
+            if (platePos == armPos) {
+                isGroundHavePlate = true;
+                break;
+            }
+        }
+        if (!isGroundHavePlate) {
+            LOG_DEBUG("No plate");
+            auto plate = c->PopPlate();
+            plate->SetState(PlateState::IDLE);
+            if (c->GetCarryingCount() == 0) {
+                c->SetState(ArmState::RETURNING);
+                LOG_DEBUG("Return");
             }
         }
     }

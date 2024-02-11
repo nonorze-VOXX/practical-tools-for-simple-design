@@ -10,11 +10,13 @@
 #include <glm/detail/qualifier.hpp>
 #include <glm/fwd.hpp>
 #include <memory>
+#include <queue>
 #include <set>
 #include <vector>
 
 enum class Direction { UP, DOWN, LEFT, RIGHT };
 enum class PlateState { IDLE, CARRYING, BOXING };
+enum class ArmState { IDLE, CARRYING, WAITING, RETURNING };
 
 inline glm::vec2 DirectionToVec2(Direction direction) {
     switch (direction) {
@@ -168,12 +170,11 @@ public:
     void SetState(PlateState state) { m_state = state; }
     PlateState GetState() { return m_state; }
 };
-enum class ArmState { IDLE, CARRYING };
 class Arm : public Component {
     Direction m_direction;
     ArmState m_state = ArmState::IDLE;
-    std::pmr::set<std::shared_ptr<Plate>> m_context =
-        std::pmr::set<std::shared_ptr<Plate>>();
+    std::pmr::vector<std::shared_ptr<Plate>> m_context =
+        std::pmr::vector<std::shared_ptr<Plate>>();
     float carryingTime = 1;
     float carryingTimer = 0;
 
@@ -189,8 +190,15 @@ public:
     }
     void SetState(ArmState state) { m_state = state; }
     ArmState GetState() { return m_state; }
-    void CarryUp(std::shared_ptr<Plate> go) { m_context.insert(go); }
-    void CarryDown(std::shared_ptr<Plate> go) { m_context.erase(go); }
+    void CarryUp(std::shared_ptr<Plate> go) { m_context.push_back(go); }
+    std::shared_ptr<Plate> PopPlate() {
+        auto result = m_context.back();
+        m_context.pop_back();
+        return result;
+    }
+    int GetCarryingCount() { return m_context.size(); }
+
+    // void CarryDown(std::shared_ptr<Plate> go) { m_context.erase(go); }
     void SetDirection(Direction direction) {
         m_direction = direction;
         SetRotation(DirectionToAngle(direction));
@@ -201,7 +209,7 @@ public:
         return GetPostion() + p;
     }
     Direction GetDirection() { return m_direction; }
-    std::pmr::set<std::shared_ptr<Plate>> GetCarrying() { return m_context; }
+    std::pmr::vector<std::shared_ptr<Plate>> GetCarrying() { return m_context; }
 };
 // class Box : public Component {
 //     std::pmr::vector<std::shared_ptr<Component>> m_context =
