@@ -10,6 +10,7 @@
 #include <glm/detail/qualifier.hpp>
 #include <glm/fwd.hpp>
 #include <memory>
+#include <memory_resource>
 #include <queue>
 #include <set>
 #include <vector>
@@ -57,11 +58,7 @@ public:
             std::make_unique<Util::Image>("../assets/sprites/giraffe.png"));
     }
 };
-class Initable {
-public:
-    virtual void Init() = 0;
-};
-template <class T = Initable>
+template <class T>
 class Singleton {
 private:
     static inline std::shared_ptr<T> m_instance = nullptr;
@@ -70,7 +67,6 @@ public:
     static std::shared_ptr<T> GetInstance() {
         if (m_instance == nullptr) {
             m_instance = std::make_shared<T>();
-            m_instance->Init();
         }
         return m_instance;
     }
@@ -125,18 +121,13 @@ public:
     }
 };
 template <class T = Component>
-class Factory : public Singleton<Factory<T>>,
-                public Initable,
-                public WorldFactory {
+class Factory : public Singleton<Factory<T>>, public WorldFactory {
 
-    std::pmr::vector<std::shared_ptr<T>> m_components;
+    std::pmr::vector<std::shared_ptr<T>> m_components =
+        std::pmr::vector<std::shared_ptr<T>>();
 
 public:
     std::pmr::vector<std::shared_ptr<T>> GetList() { return m_components; };
-
-    void Init() override {
-        m_components = std::pmr::vector<std::shared_ptr<T>>();
-    };
 
     std::shared_ptr<T> Create() {
         auto go = std::make_shared<T>();
@@ -165,8 +156,12 @@ public:
 
 class Plate : public Component {
     PlateState m_state = PlateState::IDLE;
+    glm::vec2 deltaMove = {0, 0};
 
 public:
+    void ResetDeltaMove() { deltaMove = {0, 0}; }
+    void AddDeltaMove(const glm::vec2 &delta) { deltaMove += delta; }
+    glm::vec2 GetDeltaMove() { return deltaMove; }
     void SetState(PlateState state) { m_state = state; }
     PlateState GetState() { return m_state; }
 };

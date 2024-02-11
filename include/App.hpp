@@ -40,6 +40,7 @@ private:
     void ArmReturning(std::pmr::vector<std::shared_ptr<Arm>> arm);
     void PlateWaitting(std::pmr::vector<std::shared_ptr<Plate>> plate,
                        std::pmr::vector<std::shared_ptr<Arm>> arm);
+    void PlateMove(std::pmr::vector<std::shared_ptr<Plate>> plate);
 };
 
 #endif

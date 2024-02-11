@@ -174,6 +174,7 @@ void App::Update() {
     ArmReturning(Factory<Arm>::GetInstance()->GetList());
     PlateWaitting(Factory<Plate>::GetInstance()->GetList(),
                   Factory<Arm>::GetInstance()->GetList());
+    PlateMove(Factory<Plate>::GetInstance()->GetList());
     WorldFactory::Draw();
 
     // m_Giraffe->Update();
@@ -194,8 +195,7 @@ void App::ConveyorCarryPlate(
             auto platePos = PositionToGrid(p->GetPostion());
             auto converyorPos = PositionToGrid(c->GetPostion());
             if (platePos == converyorPos) {
-                p->SetPostion(p->GetPostion() +
-                              DirectionToVec2(c->GetDirection()) * speed);
+                p->AddDeltaMove(DirectionToVec2(c->GetDirection()) * speed);
             }
         }
     }
@@ -250,7 +250,30 @@ void App::ArmReturning(std::pmr::vector<std::shared_ptr<Arm>> arm) {
     }
 }
 
-// void App::PlateMove(std::pmr::vector<std::shared_ptr<Plate>> plate) {}
+void App::PlateMove(std::pmr::vector<std::shared_ptr<Plate>> plate) {
+    for (auto &p1 : plate) {
+        if (p1->GetState() != PlateState::IDLE)
+            continue;
+        bool collide = false;
+        for (auto &p2 : plate) {
+            if (p2->GetState() != PlateState::IDLE)
+                continue;
+            if (p1 == p2)
+                continue;
+
+            auto p1Pos = PositionToGrid(p1->GetPostion() + p1->GetDeltaMove());
+            auto p2Pos = PositionToGrid(p2->GetPostion());
+            if (p1Pos == p2Pos) {
+                collide = true;
+                break;
+            }
+        }
+        if (!collide) {
+            p1->SetPostion(p1->GetPostion() + p1->GetDeltaMove());
+            p1->ResetDeltaMove();
+        }
+    };
+}
 void App::PlateWaitting(std::pmr::vector<std::shared_ptr<Plate>> plate,
                         std::pmr::vector<std::shared_ptr<Arm>> arm) {
     for (auto &c : arm) {
