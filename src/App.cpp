@@ -270,8 +270,8 @@ void App::PlateMove(std::pmr::vector<std::shared_ptr<Plate>> plate) {
         }
         if (!collide) {
             p1->SetPostion(p1->GetPostion() + p1->GetDeltaMove());
-            p1->ResetDeltaMove();
         }
+        p1->ResetDeltaMove();
     };
 }
 void App::PlateWaitting(std::pmr::vector<std::shared_ptr<Plate>> plate,
