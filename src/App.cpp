@@ -172,6 +172,7 @@ void App::Update() {
     ArmCarryPlate(Factory<Plate>::GetInstance()->GetList(),
                   Factory<Arm>::GetInstance()->GetList());
     ArmCarrying(Factory<Arm>::GetInstance()->GetList());
+    ArmReturning(Factory<Arm>::GetInstance()->GetList());
     PlateWaitting(Factory<Plate>::GetInstance()->GetList(),
                   Factory<Arm>::GetInstance()->GetList());
     WorldFactory::Draw();
@@ -224,15 +225,28 @@ void App::ArmCarryPlate(std::pmr::vector<std::shared_ptr<Plate>> plate,
 }
 void App::ArmCarrying(std::pmr::vector<std::shared_ptr<Arm>> arm) {
     for (auto &a : arm) {
-        if (a->GetState() == ArmState::CARRYING) {
-            auto plate = a->GetCarrying();
-            std::for_each(plate.begin(), plate.end(), [&](auto &p) {
-                p->SetPostion(a->GetHandPosition());
-            });
-            if (a->IsTimerEnd()) {
-                a->SetState(ArmState::WAITING);
-                // a->ResetTimer();
-            }
+        if (a->GetState() != ArmState::CARRYING) {
+            continue;
+        }
+        auto plate = a->GetCarrying();
+        std::for_each(plate.begin(), plate.end(),
+                      [&](auto &p) { p->SetPostion(a->GetHandPosition()); });
+        a->SetRotation(a->GetCarryingAngle());
+        if (a->IsTimerEnd()) {
+            a->SetState(ArmState::WAITING);
+        }
+    }
+}
+void App::ArmReturning(std::pmr::vector<std::shared_ptr<Arm>> arm) {
+    for (auto &a : arm) {
+        if (a->GetState() != ArmState::RETURNING) {
+            continue;
+        }
+        a->SetRotation(a->GetCarryingAngle());
+        if (a->IsReturnEnd()) {
+            a->SetState(ArmState::IDLE);
+            LOG_DEBUG("go back to idle");
+            a->ResetTimer();
         }
     }
 }

@@ -182,10 +182,23 @@ public:
     void ResetTimer() { carryingTimer = 0; }
     // float GetTimer() { return carryingTimer; }
 
-    bool IsTimerEnd() { return carryingTimer > carryingTime; }
+    bool IsTimerEnd() { return carryingTimer >= carryingTime; }
+    bool IsReturnEnd() { return carryingTimer >= carryingTime * 2; }
     void Update(const Util::Transform &transform = Util::Transform()) override {
-        if (m_state == ArmState::CARRYING && carryingTimer < carryingTime) {
-            carryingTimer += Util::Time::GetDeltaTime();
+        if (m_state == ArmState::CARRYING) {
+            if (carryingTimer < carryingTime) {
+                carryingTimer += Util::Time::GetDeltaTime();
+                if (carryingTimer > carryingTime) {
+                    carryingTimer = carryingTime;
+                }
+            }
+        } else if (m_state == ArmState::RETURNING) {
+            if (carryingTimer < carryingTime * 2) {
+                carryingTimer += Util::Time::GetDeltaTime();
+                if (carryingTimer > carryingTime * 2) {
+                    carryingTimer = carryingTime * 2;
+                }
+            }
         }
     }
     void SetState(ArmState state) { m_state = state; }
@@ -204,10 +217,14 @@ public:
         SetRotation(DirectionToAngle(direction));
     }
     glm::vec2 GetHandPosition() {
-        auto p = 50.0F * AngleToVec2(DirectionToAngle(m_direction) + 180 +
-                                     180 * (carryingTimer / carryingTime));
+        auto p = 50.0F * AngleToVec2(GetCarryingAngle());
         return GetPostion() + p;
     }
+    float GetCarryingAngle() {
+        return DirectionToAngle(m_direction) + 180 +
+               180 * (carryingTimer / carryingTime);
+    }
+
     Direction GetDirection() { return m_direction; }
     std::pmr::vector<std::shared_ptr<Plate>> GetCarrying() { return m_context; }
 };
