@@ -7,9 +7,11 @@
 #include <glm/detail/qualifier.hpp>
 #include <glm/fwd.hpp>
 #include <memory>
+#include <set>
 #include <vector>
 
 enum class Direction { UP, DOWN, LEFT, RIGHT };
+enum class PlateState { IDLE, CARRYING, BOXING };
 
 inline glm::vec2 DirectionToVec2(Direction direction) {
     switch (direction) {
@@ -156,6 +158,33 @@ public:
             std::make_unique<Util::Image>("../assets/sprites/conveyor.bmp"));
     }
 };
-class Plate : public Component {};
-class Arm : public Component {};
+
+class Plate : public Component {
+    PlateState m_state = PlateState::IDLE;
+
+public:
+    void SetState(PlateState state) { m_state = state; }
+    PlateState GetState() { return m_state; }
+};
+class Arm : public Component {
+    Direction m_direction;
+    std::pmr::set<std::shared_ptr<Plate>> m_context =
+        std::pmr::set<std::shared_ptr<Plate>>();
+
+public:
+    void CarryUp(std::shared_ptr<Plate> go) { m_context.insert(go); }
+    void CarryDown(std::shared_ptr<Plate> go) { m_context.erase(go); }
+    void SetDirection(Direction direction) {
+        m_direction = direction;
+        SetRotation(DirectionToRotation(direction));
+    }
+    Direction GetDirection() { return m_direction; }
+};
+// class Box : public Component {
+//     std::pmr::vector<std::shared_ptr<Component>> m_context =
+//         std::pmr::vector<std::shared_ptr<Component>>();
+
+// public:
+//     void PutIn(std::shared_ptr<Component> go) { m_context.push_back(go); }
+// };
 #endif

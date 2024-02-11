@@ -1,5 +1,6 @@
 #include "App.hpp"
 
+#include "SDL_video.h"
 #include "Util/Image.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
@@ -14,27 +15,99 @@
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <vector>
+enum class MapObjectType { ARM, CONVERYOR, BOX, NONE };
+struct MapObject {
+    MapObjectType type;
+    Direction direction;
+};
 
 void App::Start() {
     LOG_TRACE("Start");
-    std::pmr::vector<std::vector<int>> map{
-        {0, 0, 0, 0},
-        {1, 1, 1, 1, 1},
-        {0, 0, 0, 0},
+    std::pmr::vector<std::vector<MapObject>> map{
+        {{
+            {
+                MapObjectType::CONVERYOR,
+                Direction::RIGHT,
+            },
+            {
+                MapObjectType::CONVERYOR,
+                Direction::UP,
+            },
+            {
+                MapObjectType::CONVERYOR,
+                Direction::LEFT,
+            },
+            {
+                MapObjectType::CONVERYOR,
+                Direction::DOWN,
+            },
+        }},
+        {{
+            {
+                MapObjectType::ARM,
+                Direction::RIGHT,
+            },
+            {
+                MapObjectType::ARM,
+                Direction::UP,
+            },
+            {
+                MapObjectType::ARM,
+                Direction::LEFT,
+            },
+            {
+                MapObjectType::ARM,
+                Direction::DOWN,
+            },
+        }},
+        {{
+            {
+                MapObjectType::CONVERYOR,
+                Direction::RIGHT,
+            },
+            {
+                MapObjectType::CONVERYOR,
+                Direction::UP,
+            },
+            {
+                MapObjectType::CONVERYOR,
+                Direction::LEFT,
+            },
+            {
+                MapObjectType::CONVERYOR,
+                Direction::DOWN,
+            },
+        }},
     };
     // LOG_DEBUG(static_cast<int>(-(map[i].size() - 1) / 2))
     for (int i = 0; i < static_cast<int>(map.size()); i++) {
         for (int ii = 0; ii < static_cast<int>(map[i].size()); ii++) {
             auto x = static_cast<int>(-(map[i].size() - 1) / 2 + ii);
             auto y = static_cast<int>(-(map.size() - 1) / 2 + i);
-            if (map[i][ii] == 0)
+
+            switch (map.at(i).at(ii).type) {
+            case MapObjectType::NONE:
                 continue;
+            case MapObjectType::ARM: {
+                auto f = Factory<Arm>::GetInstance();
+                auto go = f->Create();
+                go->SetPostion({x * gridWidth, y * gridWidth});
+                go->SetScale(gridWidth / go->GetScaledSize());
+                go->SetDirection(map.at(i).at(ii).direction);
+            } break;
+            case MapObjectType::CONVERYOR: {
+                auto f = Factory<Converyor>::GetInstance();
+                auto go = f->Create();
+                go->SetPostion({x * gridWidth, y * gridWidth});
+                go->SetScale(gridWidth / go->GetScaledSize());
+                go->SetDirection(map.at(i).at(ii).direction);
+            }
+
+            break;
+            case MapObjectType::BOX:
+                break;
+            }
             LOG_DEBUG("x: {}, y: {}", x, y);
-            auto f = Factory<Converyor>::GetInstance();
-            auto go = f->Create();
-            go->SetPostion({x * gridWidth, y * gridWidth});
-            go->SetScale(gridWidth / go->GetScaledSize());
-            go->SetDirection(Direction::RIGHT);
             LOG_DEBUG("test {} {}", i, ii);
         }
     }
@@ -78,7 +151,8 @@ void App::Update() {
         LOG_DEBUG("Scrolling: x: {}, y: {}", delta.x, delta.y);
     }
     if (Util::Input::IsMouseMoving()) {
-        // LOG_DEBUG("Mouse moving! x:{}, y{}", cursorPos.x, cursorPos.y);
+        // LOG_DEBUG("Mouse moving! x:{}, y{}", cursorPos.x,
+        // cursorPos.y);
     }
 
     if (Util::Input::IsKeyPressed(Util::Keycode::ESCAPE) ||
