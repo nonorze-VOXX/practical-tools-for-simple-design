@@ -33,9 +33,10 @@ private:
     void
     ConveryorCarryPlate(std::pmr::vector<std::shared_ptr<Plate>> plate,
                         std::pmr::vector<std::shared_ptr<Converyor>> converyor);
-    glm::vec2 ConvertPositionToGrid(glm::vec2 pos) {
-        return round(pos / gridWidth);
-    };
+    void ArmCarryPlate(std::pmr::vector<std::shared_ptr<Plate>> plate,
+                       std::pmr::vector<std::shared_ptr<Arm>> converyor);
+    glm::vec2 PositionToGrid(glm::vec2 pos) { return round(pos / gridWidth); };
+    glm::vec2 GridToPosition(glm::vec2 grid) { return grid * gridWidth; };
 };
 
 #endif

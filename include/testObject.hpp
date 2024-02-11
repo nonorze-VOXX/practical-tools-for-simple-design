@@ -8,12 +8,39 @@
 #include <glm/fwd.hpp>
 #include <memory>
 #include <vector>
+
+enum class Direction { UP, DOWN, LEFT, RIGHT };
+
+inline glm::vec2 DirectionToVec2(Direction direction) {
+    switch (direction) {
+
+    case Direction::UP:
+        return {0, 1};
+    case Direction::DOWN:
+        return {0, -1};
+    case Direction::LEFT:
+        return {-1, 0};
+    case Direction::RIGHT:
+        return {1, 0};
+    }
+}
+inline float DirectionToRotation(Direction direction) {
+    auto vec = DirectionToVec2(direction);
+    return vec.x * -90 + vec.y * ((-1) + vec.y) * 90;
+}
+// 1 0 -> 270
+// -1 0 -> 90
+// 0 1 -> 0
+// 0 -1 -> 180
 class Component : public Util::GameObject {
     int m_id;
 
 public:
     void SetId(int id) { m_id = id; }
     void SetPostion(const glm::vec2 &position);
+    void SetRotation(const float &rotation) {
+        m_Transform.rotation = rotation * 3.14 / 180;
+    };
     const glm::vec2 GetPostion() { return m_Transform.translation; };
     void SetScale(const glm::vec2 &scale);
     int GetId() { return m_id; }
@@ -114,10 +141,21 @@ public:
     }
 };
 class Converyor : public Component {
+    Direction m_direction;
+
+public:
+    // Converyor(Direction direction)
+    //     : m_direction(direction) {}
+    void SetDirection(Direction direction) {
+        m_direction = direction;
+        SetRotation(DirectionToRotation(direction));
+    }
+    Direction GetDirection() { return m_direction; }
     void Start() override {
         SetDrawable(
             std::make_unique<Util::Image>("../assets/sprites/conveyor.bmp"));
     }
 };
 class Plate : public Component {};
+class Arm : public Component {};
 #endif
