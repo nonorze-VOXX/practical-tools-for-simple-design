@@ -3,7 +3,6 @@
 
 #include "pch.hpp" // IWYU pragma: export
 
-#include "Giraffe.hpp"
 #include "testObject.hpp"
 #include <cmath>
 #include <glm/fwd.hpp>
@@ -31,8 +30,8 @@ private:
     // std::shared_ptr<Giraffe> m_Giraffe = std::make_shared<Giraffe>();
     // std::shared_ptr<TestObject> test;
     void
-    ConveryorCarryPlate(std::pmr::vector<std::shared_ptr<Plate>> plate,
-                        std::pmr::vector<std::shared_ptr<Converyor>> converyor);
+    ConveyorCarryPlate(std::pmr::vector<std::shared_ptr<Plate>> plate,
+                       std::pmr::vector<std::shared_ptr<Conveyor>> converyor);
     void ArmCarryPlate(std::pmr::vector<std::shared_ptr<Plate>> plate,
                        std::pmr::vector<std::shared_ptr<Arm>> converyor);
     glm::vec2 PositionToGrid(glm::vec2 pos) { return round(pos / gridWidth); };

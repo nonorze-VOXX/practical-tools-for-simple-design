@@ -146,7 +146,7 @@ public:
         return go;
     }
 };
-class Converyor : public Component {
+class Conveyor : public Component {
     Direction m_direction;
 
 public:

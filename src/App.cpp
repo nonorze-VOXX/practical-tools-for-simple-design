@@ -1,6 +1,5 @@
 #include "App.hpp"
 
-#include "SDL_video.h"
 #include "Util/Image.hpp"
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
@@ -25,7 +24,7 @@ struct MapObject {
 void App::Start() {
     LOG_TRACE("Start");
     std::pmr::vector<std::vector<MapObject>> map{
-        {{
+        {
             {
                 MapObjectType::CONVERYOR,
                 Direction::RIGHT,
@@ -42,8 +41,8 @@ void App::Start() {
                 MapObjectType::CONVERYOR,
                 Direction::DOWN,
             },
-        }},
-        {{
+        },
+        {
             {
                 MapObjectType::ARM,
                 Direction::RIGHT,
@@ -60,8 +59,8 @@ void App::Start() {
                 MapObjectType::ARM,
                 Direction::DOWN,
             },
-        }},
-        {{
+        },
+        {
             {
                 MapObjectType::CONVERYOR,
                 Direction::RIGHT,
@@ -78,7 +77,7 @@ void App::Start() {
                 MapObjectType::CONVERYOR,
                 Direction::DOWN,
             },
-        }},
+        },
     };
     // LOG_DEBUG(static_cast<int>(-(map[i].size() - 1) / 2))
     for (int i = 0; i < static_cast<int>(map.size()); i++) {
@@ -97,7 +96,7 @@ void App::Start() {
                 go->SetDirection(map.at(i).at(ii).direction);
             } break;
             case MapObjectType::CONVERYOR: {
-                auto f = Factory<Converyor>::GetInstance();
+                auto f = Factory<Conveyor>::GetInstance();
                 auto go = f->Create();
                 go->SetPostion({x * gridWidth, y * gridWidth});
                 go->SetScale(gridWidth / go->GetScaledSize());
@@ -167,8 +166,8 @@ void App::Update() {
         Util::Input::SetCursorPosition({0.0F, 0.0F});
     }
     WorldFactory::Update();
-    ConveryorCarryPlate(Factory<Plate>::GetInstance()->GetList(),
-                        Factory<Converyor>::GetInstance()->GetList());
+    ConveyorCarryPlate(Factory<Plate>::GetInstance()->GetList(),
+                       Factory<Conveyor>::GetInstance()->GetList());
     ArmCarryPlate(Factory<Plate>::GetInstance()->GetList(),
                   Factory<Arm>::GetInstance()->GetList());
     ArmCarrying(Factory<Arm>::GetInstance()->GetList());
@@ -184,9 +183,9 @@ void App::End() { // NOLINT(this method will mutate members in the future)
     LOG_TRACE("End");
 }
 
-void App::ConveryorCarryPlate(
+void App::ConveyorCarryPlate(
     std::pmr::vector<std::shared_ptr<Plate>> plate,
-    std::pmr::vector<std::shared_ptr<Converyor>> converyor) {
+    std::pmr::vector<std::shared_ptr<Conveyor>> converyor) {
     float speed = 1;
     for (auto &p : plate) {
         if (p->GetState() != PlateState::IDLE)
@@ -251,6 +250,7 @@ void App::ArmReturning(std::pmr::vector<std::shared_ptr<Arm>> arm) {
     }
 }
 
+// void App::PlateMove(std::pmr::vector<std::shared_ptr<Plate>> plate) {}
 void App::PlateWaitting(std::pmr::vector<std::shared_ptr<Plate>> plate,
                         std::pmr::vector<std::shared_ptr<Arm>> arm) {
     for (auto &c : arm) {
