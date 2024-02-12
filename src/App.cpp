@@ -14,7 +14,12 @@
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <vector>
-// issue conveyor know next and precius
+
+// TODO conveyor know next and precius
+// TODO box
+// TODO map editor
+// TODO gameflow
+
 enum class MapObjectType { ARM, CONVERYOR, BOX, NONE };
 struct MapObject {
     MapObjectType type;
@@ -23,6 +28,7 @@ struct MapObject {
 
 void App::Start() {
     LOG_TRACE("Start");
+
     std::pmr::vector<std::vector<MapObject>> map{
         {
             {
@@ -39,7 +45,7 @@ void App::Start() {
             },
             {
                 MapObjectType::CONVERYOR,
-                Direction::DOWN,
+                Direction::LEFT,
             },
         },
         {
@@ -66,12 +72,29 @@ void App::Start() {
                 Direction::RIGHT,
             },
             {
+                MapObjectType::BOX,
+            },
+            {
+                MapObjectType::CONVERYOR,
+                Direction::LEFT,
+            },
+            {
+                MapObjectType::CONVERYOR,
+                Direction::DOWN,
+            },
+        },
+        {
+            {
+                MapObjectType::CONVERYOR,
+                Direction::DOWN,
+            },
+            {
                 MapObjectType::CONVERYOR,
                 Direction::UP,
             },
             {
                 MapObjectType::CONVERYOR,
-                Direction::LEFT,
+                Direction::RIGHT,
             },
             {
                 MapObjectType::CONVERYOR,
@@ -104,8 +127,14 @@ void App::Start() {
             }
 
             break;
-            case MapObjectType::BOX:
-                break;
+            case MapObjectType::BOX: {
+                auto f = Factory<Box>::GetInstance();
+                auto go = f->Create();
+                go->SetPostion({x * gridWidth, y * gridWidth});
+                go->SetScale(gridWidth / go->GetScaledSize());
+            }
+
+            break;
             }
         }
     }
@@ -169,11 +198,13 @@ void App::Update() {
     ConveyorCarryPlate(Factory<Plate>::GetInstance()->GetList(),
                        Factory<Conveyor>::GetInstance()->GetList());
     ArmCarryPlate(Factory<Plate>::GetInstance()->GetList(),
-                  Factory<Arm>::GetInstance()->GetList());
+                  Factory<Arm>::GetInstance()->GetList(),
+                  Factory<Box>::GetInstance()->GetList());
     ArmCarrying(Factory<Arm>::GetInstance()->GetList());
     ArmReturning(Factory<Arm>::GetInstance()->GetList());
     PlateWaitting(Factory<Plate>::GetInstance()->GetList(),
-                  Factory<Arm>::GetInstance()->GetList());
+                  Factory<Arm>::GetInstance()->GetList(),
+                  Factory<Box>::GetInstance()->GetList());
     PlateMove(Factory<Plate>::GetInstance()->GetList());
     WorldFactory::Draw();
 
@@ -202,20 +233,38 @@ void App::ConveyorCarryPlate(
 }
 
 void App::ArmCarryPlate(std::pmr::vector<std::shared_ptr<Plate>> plate,
-                        std::pmr::vector<std::shared_ptr<Arm>> arm) {
-    for (auto &p : plate) {
-        if (p->GetState() != PlateState::IDLE)
+                        std::pmr::vector<std::shared_ptr<Arm>> arm,
+                        std::pmr::vector<std::shared_ptr<Box>> box) {
+    for (auto &c : arm) {
+        if (c->GetState() != ArmState::IDLE)
             continue;
-
-        for (auto &c : arm) {
-            if (c->GetState() != ArmState::IDLE)
+        for (auto &b : box) {
+            if (b->GetCarryingCount() == 0) {
                 continue;
+            }
+            auto boxPos = PositionToGrid(b->GetPostion());
+            auto armPos = PositionToGrid(c->GetPostion());
+            if (boxPos == armPos - DirectionToVec2(c->GetDirection())) {
+                auto p = b->PopPlate();
+                p->SetState(PlateState::CARRYING);
+                c->SetState(ArmState::CARRYING);
+                c->CarryUp(p);
+                break;
+                // p->SetPostion(GridToPosition(
+                //     armPos + DirectionToVec2(c->GetDirection())));
+            }
+        }
+        for (auto &p : plate) {
+            if (p->GetState() != PlateState::IDLE)
+                continue;
+
             auto platePos = PositionToGrid(p->GetPostion());
             auto armPos = PositionToGrid(c->GetPostion());
             if (platePos == armPos - DirectionToVec2(c->GetDirection())) {
                 p->SetState(PlateState::CARRYING);
                 c->SetState(ArmState::CARRYING);
                 c->CarryUp(p);
+                break;
                 // p->SetPostion(GridToPosition(
                 //     armPos + DirectionToVec2(c->GetDirection())));
             }
@@ -275,29 +324,44 @@ void App::PlateMove(std::pmr::vector<std::shared_ptr<Plate>> plate) {
     };
 }
 void App::PlateWaitting(std::pmr::vector<std::shared_ptr<Plate>> plate,
-                        std::pmr::vector<std::shared_ptr<Arm>> arm) {
+                        std::pmr::vector<std::shared_ptr<Arm>> arm,
+                        std::pmr::vector<std::shared_ptr<Box>> box) {
     for (auto &c : arm) {
         if (c->GetState() != ArmState::WAITING)
             continue;
-        bool isGroundHavePlate = false;
-        for (auto &p : plate) {
-            if (p->GetState() != PlateState::IDLE)
-                continue;
-            auto platePos = PositionToGrid(p->GetPostion());
+        bool isGroundHaveBox = false;
+        for (auto &b : box) {
+            auto boxPOs = PositionToGrid(b->GetPostion());
             auto armPos = PositionToGrid(c->GetHandPosition());
-            if (platePos == armPos) {
-                isGroundHavePlate = true;
+            if (boxPOs == armPos) {
+                auto plate = c->PopPlate();
+                plate->SetState(PlateState::BOXING);
+                b->PutIn(plate);
+                isGroundHaveBox = true;
                 break;
             }
         }
-        if (!isGroundHavePlate) {
-            LOG_DEBUG("No plate");
-            auto plate = c->PopPlate();
-            plate->SetState(PlateState::IDLE);
-            if (c->GetCarryingCount() == 0) {
-                c->SetState(ArmState::RETURNING);
-                LOG_DEBUG("Return");
+        if (!isGroundHaveBox) {
+            bool isGroundHavePlate = false;
+            for (auto &p : plate) {
+                if (p->GetState() != PlateState::IDLE)
+                    continue;
+                auto platePos = PositionToGrid(p->GetPostion());
+                auto armPos = PositionToGrid(c->GetHandPosition());
+                if (platePos == armPos) {
+                    isGroundHavePlate = true;
+                    break;
+                }
             }
+            if (!isGroundHavePlate) {
+                LOG_DEBUG("No plate");
+                auto plate = c->PopPlate();
+                plate->SetState(PlateState::IDLE);
+            }
+        }
+        if (c->GetCarryingCount() == 0) {
+            c->SetState(ArmState::RETURNING);
+            LOG_DEBUG("Return");
         }
     }
 }

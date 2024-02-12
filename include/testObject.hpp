@@ -223,11 +223,22 @@ public:
     Direction GetDirection() { return m_direction; }
     std::pmr::vector<std::shared_ptr<Plate>> GetCarrying() { return m_context; }
 };
-// class Box : public Component {
-//     std::pmr::vector<std::shared_ptr<Component>> m_context =
-//         std::pmr::vector<std::shared_ptr<Component>>();
+class Box : public Component {
+    std::pmr::vector<std::shared_ptr<Plate>> m_context =
+        std::pmr::vector<std::shared_ptr<Plate>>();
 
-// public:
-//     void PutIn(std::shared_ptr<Component> go) { m_context.push_back(go); }
-// };
+public:
+    void Start() override {
+        SetDrawable(
+            std::make_unique<Util::Image>("../assets/sprites/circle.bmp"));
+    }
+
+    void PutIn(std::shared_ptr<Plate> go) { m_context.push_back(go); }
+    std::shared_ptr<Plate> PopPlate() {
+        auto result = m_context.back();
+        m_context.pop_back();
+        return result;
+    }
+    int GetCarryingCount() { return m_context.size(); }
+};
 #endif
