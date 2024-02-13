@@ -91,7 +91,7 @@ void App::GenerateMap(int level) {
                     plate->SetPostion(go->GetPostion());
                     plate->SetScale(gridWidth / plate->GetScaledSize());
                     plate->SetState(PlateState::BOXING);
-                    plate->SetZIndex(5);
+                    plate->SetZIndex(7);
                     go->PutIn(plate);
                 }
                 go->SetScale(gridWidth / go->GetScaledSize());
@@ -182,17 +182,19 @@ void App::Update() {
                     disablePosList.push_back(component->GetPostion());
                 }
             }
-            // auto disableList = Factory<Disable>::GetInstance()->GetList();
-            // for (int i = 0; i < static_cast<int>(disablePosList.size()); i++)
-            // {
-            //     auto pos = disablePosList[i];
-            //     if (i >= static_cast<int>(disableList.size())) {
-            //         auto d = Factory<Disable>::GetInstance()->Create();
-            //         d->Start();
-            //     }
-            //     auto dis = disableList.at(i);
-            //     dis->SetPostion(pos);
-            // }
+            for (int i = 0; i < static_cast<int>(disablePosList.size()); i++) {
+                auto pos = disablePosList[i];
+                if (i >=
+                    static_cast<int>(
+                        Factory<Disable>::GetInstance()->GetList().size())) {
+                    auto d = Factory<Disable>::GetInstance()->Create();
+                    d->Start();
+                    d->SetScale(gridWidth / d->GetScaledSize());
+                    d->SetZIndex(6);
+                }
+                auto dis = Factory<Disable>::GetInstance()->GetList().at(i);
+                dis->SetPostion(pos);
+            }
         }
         StartButton->Draw();
         WorldFactory::Draw();
