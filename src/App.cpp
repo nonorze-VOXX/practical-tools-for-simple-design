@@ -37,6 +37,13 @@ std::pmr::vector<std::vector<MapObject>> map1{
 { {MapObjectType::NONE},{MapObjectType::NONE}, { MapObjectType::NONE, Direction::DOWN, }, { MapObjectType::ARM, Direction::DOWN, }, { MapObjectType::ARM, Direction::DOWN, }},
 { {MapObjectType::NONE},{MapObjectType::NONE},{ MapObjectType::NONE, Direction::RIGHT, }, { MapObjectType::BOX }, { MapObjectType::GOAL } }
 };
+std::pmr::vector<std::vector<MapObject>> map2{
+{ {MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::BOX},{MapObjectType::NONE},{MapObjectType::NONE},},
+{ {MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::ARM,Direction::DOWN},{MapObjectType::NONE},{MapObjectType::NONE},},
+{ {MapObjectType::BOX},{MapObjectType::ARM,Direction::RIGHT},{MapObjectType::CONVERYOR,Direction::RIGHT},{MapObjectType::CONVERYOR,Direction ::RIGHT},{MapObjectType::CONVERYOR ,Direction::RIGHT},},
+{ {MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::ARM, Direction::DOWN},},
+{ {MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::GOAL},},
+};
 std::pmr::vector<std::vector<MapObject>> map0{
 };
 // clang-format on
@@ -44,6 +51,9 @@ void App::GenerateMap(int level) {
     auto map = map0;
     if (level == 0) {
         map = map1;
+    }
+    if (level == 1) {
+        map = map2;
     }
 
     for (int i = 0; i < static_cast<int>(map.size()); i++) {
@@ -235,14 +245,16 @@ void App::Update() {
             if (goalbox->IsGoal())
                 totalGoalPlate += goalbox->GetCarryingCount();
         }
-        if (level == 0 && totalGoalPlate >= 10) {
+        if ((level == 0 && totalGoalPlate >= 10) ||
+            (level == 1 && totalGoalPlate >= 20)) {
             m_GameFlow = GameFlow::End;
-            if (level == 0) {
+            if (level == 1) {
                 NextLevelButton->SetImage(std::make_unique<Util::Text>(
                     "../assets/fonts/Inter.ttf", gridWidth * 2,
                     "Thank you for playing. "));
                 NextLevelButton->SetPostion({0, 0});
             }
+            level++;
         }
 
         WorldFactory::Draw();
@@ -250,6 +262,21 @@ void App::Update() {
     }
     case GameFlow::End:
         NextLevelButton->Draw();
+        if (level == 2) {
+            return;
+        }
+        NextLevelButton->Update();
+        if (NextLevelButton->GetTrigger()) {
+            m_GameFlow = GameFlow::Prepare;
+            WorldFactory::Clear();
+            Factory<Plate>::GetInstance()->Clear();
+            Factory<Conveyor>::GetInstance()->Clear();
+            Factory<Arm>::GetInstance()->Clear();
+            Factory<Disable>::GetInstance()->Clear();
+            Factory<Box>::GetInstance()->Clear();
+            GenerateMap(level);
+            NextLevelButton->SetTrigger(false);
+        }
 
         WorldFactory::Draw();
         break;
@@ -404,9 +431,13 @@ void App::PlateMove(std::pmr::vector<std::shared_ptr<Plate>> plate) {
             if (p1 == p2)
                 continue;
 
-            auto p1Pos = PositionToGrid(p1->GetPostion() + p1->GetDeltaMove());
-            auto p2Pos = PositionToGrid(p2->GetPostion());
-            if (p1Pos == p2Pos) {
+            auto p1Pos = (p1->GetPostion() + p1->GetDeltaMove());
+            auto p2Pos = (p2->GetPostion());
+            bool isin = p1Pos.x < p2Pos.x + gridWidth &&
+                        p1Pos.x + gridWidth > p2Pos.x &&
+                        p1Pos.y < p2Pos.y + gridWidth &&
+                        p1Pos.y + gridWidth > p2Pos.y;
+            if (isin) {
                 collide = true;
                 break;
             }
