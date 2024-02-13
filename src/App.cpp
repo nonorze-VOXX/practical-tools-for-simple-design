@@ -121,7 +121,6 @@ void App::GenerateMap(int level) {
     }
 }
 void App::Start() {
-
     GenerateMap(level);
 
     m_CurrentState = State::UPDATE;
@@ -129,15 +128,19 @@ void App::Start() {
     ResetButton->Start();
     NextLevelButton->Start();
     tutorioText->Start();
+    madeText->Start();
 
     StartButton->SetPostion({5 * gridWidth, 5 * gridWidth});
     ResetButton->SetPostion({5 * gridWidth, 4 * gridWidth});
     NextLevelButton->SetPostion({5 * gridWidth, 3 * gridWidth});
     tutorioText->SetPostion({-2 * gridWidth, 5 * gridWidth});
+    madeText->SetPostion({-2 * gridWidth, -5 * gridWidth});
 
     StartButton->SetScale(gridWidth / StartButton->GetScaledSize());
     ResetButton->SetScale(gridWidth / ResetButton->GetScaledSize());
     NextLevelButton->SetScale(gridWidth / ResetButton->GetScaledSize());
+    madeText->SetScale(gridWidth / ResetButton->GetScaledSize());
+
     StartButton->SetImage(
         std::make_unique<Util::Image>("../assets/sprites/triangle.bmp"));
     ResetButton->SetImage(
@@ -147,12 +150,17 @@ void App::Start() {
     tutorioText->SetImage(std::make_unique<Util::Text>(
         "../assets/fonts/Inter.ttf", gridWidth / 2,
         "LMB to some object to disable,\n one more to enable.\n all giraffe "
-        "need to go in red circle."));
+        "need to go in red circle.\n"));
+    madeText->SetImage(std::make_unique<Util::Text>(
+        "../assets/fonts/Inter.ttf", gridWidth / 2,
+        "Use PTSD framework By "
+        "ntut-open-source-club.\n The Game make By @nonorze-VOXX."));
 }
 
 void App::Update() {
     auto cursorPos = Util::Input::GetCursorPosition();
     tutorioText->Draw();
+    madeText->Draw();
     switch (m_GameFlow) {
     case GameFlow::Prepare: {
 
