@@ -19,14 +19,7 @@
 
 // gamejam
 // TODO gameflow
-// start box
-//      reset button
-//      start button
-//      end detection
-//          end box count > level need in time
-//      delete endbox to end game
 
-// click to delete
 // map design
 
 // feature
@@ -45,10 +38,6 @@ std::pmr::vector<std::vector<MapObject>> map1{
 { {MapObjectType::NONE},{MapObjectType::NONE},{ MapObjectType::NONE, Direction::RIGHT, }, { MapObjectType::BOX }, { MapObjectType::GOAL } }
 };
 std::pmr::vector<std::vector<MapObject>> map0{
-{ { MapObjectType::CONVERYOR, Direction::RIGHT, }, { MapObjectType::BOX, }, { MapObjectType::CONVERYOR, Direction::LEFT, }, { MapObjectType::CONVERYOR, Direction::LEFT, }, }, 
-{ { MapObjectType::ARM, Direction::RIGHT, }, { MapObjectType::ARM, Direction::DOWN, }, { MapObjectType::ARM, Direction::LEFT, }, { MapObjectType::ARM, Direction::DOWN, }, }, 
-{ { MapObjectType::CONVERYOR, Direction::RIGHT, }, { MapObjectType::BOX, }, { MapObjectType::CONVERYOR, Direction::LEFT, }, { MapObjectType::CONVERYOR, Direction::DOWN, }, },
-{ { MapObjectType::CONVERYOR, Direction::DOWN, }, { MapObjectType::CONVERYOR, Direction::UP, }, { MapObjectType::CONVERYOR, Direction::RIGHT, }, { MapObjectType::CONVERYOR, Direction::DOWN, }, },
 };
 // clang-format on
 void App::GenerateMap(int level) {
@@ -119,9 +108,13 @@ void App::Start() {
     StartButton->Start();
     ResetButton->Start();
     NextLevelButton->Start();
+    tutorioText->Start();
+
     StartButton->SetPostion({5 * gridWidth, 5 * gridWidth});
     ResetButton->SetPostion({5 * gridWidth, 4 * gridWidth});
     NextLevelButton->SetPostion({5 * gridWidth, 3 * gridWidth});
+    tutorioText->SetPostion({-2 * gridWidth, 5 * gridWidth});
+
     StartButton->SetScale(gridWidth / StartButton->GetScaledSize());
     ResetButton->SetScale(gridWidth / ResetButton->GetScaledSize());
     NextLevelButton->SetScale(gridWidth / ResetButton->GetScaledSize());
@@ -131,10 +124,15 @@ void App::Start() {
         std::make_unique<Util::Image>("../assets/sprites/rotate.bmp"));
     NextLevelButton->SetImage(std::make_unique<Util::Text>(
         "../assets/fonts/Inter.ttf", gridWidth, ">>>"));
+    tutorioText->SetImage(std::make_unique<Util::Text>(
+        "../assets/fonts/Inter.ttf", gridWidth / 2,
+        "LMB to some object to disable,\n one more to enable.\n All giraffe "
+        "need to go in red circle."));
 }
 
 void App::Update() {
     auto cursorPos = Util::Input::GetCursorPosition();
+    tutorioText->Draw();
     switch (m_GameFlow) {
     case GameFlow::Prepare:
         if (Util::Input::IsLButtonPressed()) {
@@ -230,7 +228,7 @@ void App::Update() {
             if (goalbox->IsGoal())
                 totalGoalPlate += goalbox->GetCarryingCount();
         }
-        if (level == 0 && totalGoalPlate >= 20) {
+        if (level == 0 && totalGoalPlate >= 10) {
             m_GameFlow = GameFlow::End;
         }
 
@@ -248,13 +246,6 @@ void App::Update() {
 
 #pragma region framework
     if (Util::Input::IsRButtonPressed()) {
-        // auto f = Factory<Arm>::GetInstance();
-        // auto go = f->Create();
-        // auto t = round(cursorPos / gridWidth) * gridWidth;
-        // go->SetPostion(t);
-        // go->SetScale(gridWidth / go->GetScaledSize());
-        // go->SetZIndex(5);
-        // LOG_DEBUG("MyGo: {}", f->GetList().size());
         LOG_DEBUG("Right button pressed");
     }
     if (Util::Input::IsMButtonPressed()) {

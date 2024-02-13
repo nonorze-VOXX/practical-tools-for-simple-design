@@ -53,6 +53,8 @@ private:
     std::shared_ptr<Button> StartButton = std::make_shared<Button>();
     std::shared_ptr<Button> ResetButton = std::make_shared<Button>();
     std::shared_ptr<Button> NextLevelButton = std::make_shared<Button>();
+    std::shared_ptr<Button> tutorioText = std::make_shared<Button>();
+
     void GenerateMap(int level);
     int level = 0;
 };
