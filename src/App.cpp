@@ -153,11 +153,16 @@ void App::Start() {
         "need to go in red circle.\n"));
     madeText->SetImage(std::make_unique<Util::Text>(
         "../assets/fonts/Inter.ttf", gridWidth / 2,
+        "Press Esc To close game.\n"
         "Use PTSD framework By "
         "ntut-open-source-club.\n The Game make By @nonorze-VOXX."));
 }
 
 void App::Update() {
+    if (Util::Input::IsKeyPressed(Util::Keycode::ESCAPE) ||
+        Util::Input::IfExit()) {
+        m_CurrentState = State::END;
+    }
     auto cursorPos = Util::Input::GetCursorPosition();
     tutorioText->Draw();
     madeText->Draw();
@@ -317,11 +322,6 @@ void App::Update() {
     if (Util::Input::IsMouseMoving()) {
         // LOG_DEBUG("Mouse moving! x:{}, y{}", cursorPos.x,
         // cursorPos.y);
-    }
-
-    if (Util::Input::IsKeyPressed(Util::Keycode::ESCAPE) ||
-        Util::Input::IfExit()) {
-        m_CurrentState = State::END;
     }
 
     if (Util::Input::IsKeyPressed(Util::Keycode::A)) {
