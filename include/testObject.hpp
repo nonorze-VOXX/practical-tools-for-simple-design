@@ -132,6 +132,7 @@ protected:
     }
 
 public:
+    static void Clear() { worldObjects.clear(); }
     static std::pmr::vector<std::shared_ptr<Component>> GetWorldObjects() {
         return worldObjects;
     }
@@ -165,6 +166,7 @@ class Factory : public Singleton<Factory<T>>, public WorldFactory {
         std::pmr::vector<std::shared_ptr<T>>();
 
 public:
+    void Clear() { m_components.clear(); }
     std::pmr::vector<std::shared_ptr<T>> GetList() { return m_components; };
 
     std::shared_ptr<T> Create() {
@@ -289,5 +291,12 @@ public:
             std::make_unique<Util::Image>("../assets/sprites/goal.bmp"));
     }
     bool IsGoal() { return isGoal; }
+};
+class Disable : public Component {
+public:
+    void Start() override {
+        SetDrawable(
+            std::make_unique<Util::Image>("../assets/sprites/disable.png"));
+    }
 };
 #endif

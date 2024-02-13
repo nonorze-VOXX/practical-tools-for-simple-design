@@ -163,6 +163,37 @@ void App::Update() {
             m_GameFlow = GameFlow::PLaying;
             StartButton->SetTrigger(false);
         }
+        {
+
+            std::pmr::vector<glm::vec2> disablePosList =
+                std::pmr::vector<glm::vec2>();
+            for (auto component : Factory<Box>::GetInstance()->GetList()) {
+                if (!component->GetActive()) {
+                    disablePosList.push_back(component->GetPostion());
+                }
+            }
+            for (auto component : Factory<Conveyor>::GetInstance()->GetList()) {
+                if (!component->GetActive()) {
+                    disablePosList.push_back(component->GetPostion());
+                }
+            }
+            for (auto component : Factory<Arm>::GetInstance()->GetList()) {
+                if (!component->GetActive()) {
+                    disablePosList.push_back(component->GetPostion());
+                }
+            }
+            // auto disableList = Factory<Disable>::GetInstance()->GetList();
+            // for (int i = 0; i < static_cast<int>(disablePosList.size()); i++)
+            // {
+            //     auto pos = disablePosList[i];
+            //     if (i >= static_cast<int>(disableList.size())) {
+            //         auto d = Factory<Disable>::GetInstance()->Create();
+            //         d->Start();
+            //     }
+            //     auto dis = disableList.at(i);
+            //     dis->SetPostion(pos);
+            // }
+        }
         StartButton->Draw();
         WorldFactory::Draw();
         break;
@@ -171,6 +202,13 @@ void App::Update() {
         if (ResetButton->GetTrigger()) {
             m_GameFlow = GameFlow::Prepare;
             ResetButton->SetTrigger(false);
+            WorldFactory::Clear();
+            Factory<Plate>::GetInstance()->Clear();
+            Factory<Conveyor>::GetInstance()->Clear();
+            Factory<Arm>::GetInstance()->Clear();
+            Factory<Disable>::GetInstance()->Clear();
+            Factory<Box>::GetInstance()->Clear();
+            GenerateMap(level);
         }
         ResetButton->Draw();
         WorldFactory::Update();
@@ -193,6 +231,7 @@ void App::Update() {
         if (level == 0 && totalGoalPlate >= 20) {
             m_GameFlow = GameFlow::End;
         }
+
         WorldFactory::Draw();
         break;
     }
