@@ -207,6 +207,9 @@ class Arm : public Component {
     float carryingTimer = 0;
 
 public:
+    void Start() override {
+        SetDrawable(std::make_unique<Util::Image>("../assets/sprites/arm.bmp"));
+    }
     void ResetTimer() { carryingTimer = 0; }
     // float GetTimer() { return carryingTimer; }
 
@@ -242,7 +245,7 @@ public:
     // void CarryDown(std::shared_ptr<Plate> go) { m_context.erase(go); }
     void SetDirection(Direction direction) {
         m_direction = direction;
-        SetRotation(DirectionToAngle(direction));
+        SetRotation(GetCarryingAngle());
     }
     glm::vec2 GetHandPosition() {
         auto p = 50.0F * AngleToVec2(GetCarryingAngle());

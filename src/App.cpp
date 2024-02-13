@@ -36,89 +36,26 @@ struct MapObject {
     MapObjectType type;
     Direction direction;
 };
+// clang-format off
+std::pmr::vector<std::vector<MapObject>> map1{
+{{MapObjectType::BOX},{ MapObjectType::ARM, Direction::RIGHT, }, { MapObjectType::CONVERYOR, Direction::RIGHT, }, { MapObjectType::CONVERYOR,Direction::RIGHT }, { MapObjectType::CONVERYOR, Direction::RIGHT, }},
+{ {MapObjectType::NONE},{MapObjectType::NONE}, { MapObjectType::NONE, Direction::DOWN, }, { MapObjectType::ARM, Direction::DOWN, }, { MapObjectType::ARM, Direction::DOWN, }},
+{ {MapObjectType::NONE},{MapObjectType::NONE},{ MapObjectType::NONE, Direction::RIGHT, }, { MapObjectType::BOX }, { MapObjectType::BOX } }
+};
+std::pmr::vector<std::vector<MapObject>> map2{
+{ { MapObjectType::CONVERYOR, Direction::RIGHT, }, { MapObjectType::BOX, }, { MapObjectType::CONVERYOR, Direction::LEFT, }, { MapObjectType::CONVERYOR, Direction::LEFT, }, }, 
+{ { MapObjectType::ARM, Direction::RIGHT, }, { MapObjectType::ARM, Direction::DOWN, }, { MapObjectType::ARM, Direction::LEFT, }, { MapObjectType::ARM, Direction::DOWN, }, }, 
+{ { MapObjectType::CONVERYOR, Direction::RIGHT, }, { MapObjectType::BOX, }, { MapObjectType::CONVERYOR, Direction::LEFT, }, { MapObjectType::CONVERYOR, Direction::DOWN, }, },
+{ { MapObjectType::CONVERYOR, Direction::DOWN, }, { MapObjectType::CONVERYOR, Direction::UP, }, { MapObjectType::CONVERYOR, Direction::RIGHT, }, { MapObjectType::CONVERYOR, Direction::DOWN, }, },
+};
+// clang-format on
+void App::GenerateMap() {
+    for (int i = 0; i < static_cast<int>(map1.size()); i++) {
+        for (int ii = 0; ii < static_cast<int>(map1[i].size()); ii++) {
+            auto x = static_cast<int>(-(map1[i].size() - 1) / 2 + ii);
+            auto y = -1 * static_cast<int>(-(map1.size() - 1) / 2 + i);
 
-void App::Start() {
-    LOG_TRACE("Start");
-
-    std::pmr::vector<std::vector<MapObject>> map{
-        {
-            {
-                MapObjectType::CONVERYOR,
-                Direction::RIGHT,
-            },
-            {
-                MapObjectType::BOX,
-            },
-            {
-                MapObjectType::CONVERYOR,
-                Direction::LEFT,
-            },
-            {
-                MapObjectType::CONVERYOR,
-                Direction::LEFT,
-            },
-        },
-        {
-            {
-                MapObjectType::ARM,
-                Direction::RIGHT,
-            },
-            {
-                MapObjectType::ARM,
-                Direction::DOWN,
-            },
-            {
-                MapObjectType::ARM,
-                Direction::LEFT,
-            },
-            {
-                MapObjectType::ARM,
-                Direction::DOWN,
-            },
-        },
-        {
-            {
-                MapObjectType::CONVERYOR,
-                Direction::RIGHT,
-            },
-            {
-                MapObjectType::BOX,
-            },
-            {
-                MapObjectType::CONVERYOR,
-                Direction::LEFT,
-            },
-            {
-                MapObjectType::CONVERYOR,
-                Direction::DOWN,
-            },
-        },
-        {
-            {
-                MapObjectType::CONVERYOR,
-                Direction::DOWN,
-            },
-            {
-                MapObjectType::CONVERYOR,
-                Direction::UP,
-            },
-            {
-                MapObjectType::CONVERYOR,
-                Direction::RIGHT,
-            },
-            {
-                MapObjectType::CONVERYOR,
-                Direction::DOWN,
-            },
-        },
-    };
-    // LOG_DEBUG(static_cast<int>(-(map[i].size() - 1) / 2))
-    for (int i = 0; i < static_cast<int>(map.size()); i++) {
-        for (int ii = 0; ii < static_cast<int>(map[i].size()); ii++) {
-            auto x = static_cast<int>(-(map[i].size() - 1) / 2 + ii);
-            auto y = static_cast<int>(-(map.size() - 1) / 2 + i);
-
-            switch (map.at(i).at(ii).type) {
+            switch (map1.at(i).at(ii).type) {
             case MapObjectType::NONE:
                 continue;
             case MapObjectType::ARM: {
@@ -126,14 +63,14 @@ void App::Start() {
                 auto go = f->Create();
                 go->SetPostion({x * gridWidth, y * gridWidth});
                 go->SetScale(gridWidth / go->GetScaledSize());
-                go->SetDirection(map.at(i).at(ii).direction);
+                go->SetDirection(map1.at(i).at(ii).direction);
             } break;
             case MapObjectType::CONVERYOR: {
                 auto f = Factory<Conveyor>::GetInstance();
                 auto go = f->Create();
                 go->SetPostion({x * gridWidth, y * gridWidth});
                 go->SetScale(gridWidth / go->GetScaledSize());
-                go->SetDirection(map.at(i).at(ii).direction);
+                go->SetDirection(map1.at(i).at(ii).direction);
             }
 
             break;
@@ -142,10 +79,11 @@ void App::Start() {
                 auto go = f->Create();
                 go->SetPostion({x * gridWidth, y * gridWidth});
                 auto pf = Factory<Plate>::GetInstance();
-                for (int iii = 0; iii < 50; iii++) {
+                for (int iii = 0; iii < 10; iii++) {
                     auto plate = pf->Create();
                     plate->SetPostion(go->GetPostion());
                     plate->SetScale(gridWidth / plate->GetScaledSize());
+                    plate->SetState(PlateState::BOXING);
                     plate->SetZIndex(5);
                     go->PutIn(plate);
                 }
@@ -156,12 +94,12 @@ void App::Start() {
             }
         }
     }
+}
+void App::Start() {
+
+    GenerateMap();
 
     m_CurrentState = State::UPDATE;
-    LOG_DEBUG(DirectionToAngle(Direction::UP));
-    LOG_DEBUG(DirectionToAngle(Direction::DOWN));
-    LOG_DEBUG(DirectionToAngle(Direction::RIGHT));
-    LOG_DEBUG(DirectionToAngle(Direction::LEFT));
     StartButton->Start();
     ResetButton->Start();
     StartButton->SetPostion({5 * gridWidth, 5 * gridWidth});
@@ -184,15 +122,15 @@ void App::Update() {
             StartButton->SetTrigger(false);
         }
         StartButton->Draw();
+        WorldFactory::Draw();
+        break;
+    case GameFlow::PLaying:
         ResetButton->Update();
         if (ResetButton->GetTrigger()) {
             m_GameFlow = GameFlow::Prepare;
             ResetButton->SetTrigger(false);
         }
         ResetButton->Draw();
-        WorldFactory::Draw();
-        break;
-    case GameFlow::PLaying:
         WorldFactory::Update();
         ConveyorCarryPlate(Factory<Plate>::GetInstance()->GetList(),
                            Factory<Conveyor>::GetInstance()->GetList());
