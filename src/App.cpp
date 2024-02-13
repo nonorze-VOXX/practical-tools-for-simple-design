@@ -41,7 +41,7 @@ struct MapObject {
 // clang-format off
 std::pmr::vector<std::vector<MapObject>> map1{
 {{MapObjectType::BOX},{ MapObjectType::ARM, Direction::RIGHT, }, { MapObjectType::CONVERYOR, Direction::RIGHT, }, { MapObjectType::CONVERYOR,Direction::RIGHT }, { MapObjectType::CONVERYOR, Direction::RIGHT, }},
-{ {MapObjectType::NONE},{MapObjectType::NONE}, { MapObjectType::NONE, Direction::DOWN, }, { MapObjectType::NONE, Direction::DOWN, }, { MapObjectType::ARM, Direction::DOWN, }},
+{ {MapObjectType::NONE},{MapObjectType::NONE}, { MapObjectType::NONE, Direction::DOWN, }, { MapObjectType::ARM, Direction::DOWN, }, { MapObjectType::ARM, Direction::DOWN, }},
 { {MapObjectType::NONE},{MapObjectType::NONE},{ MapObjectType::NONE, Direction::RIGHT, }, { MapObjectType::BOX }, { MapObjectType::GOAL } }
 };
 std::pmr::vector<std::vector<MapObject>> map0{
