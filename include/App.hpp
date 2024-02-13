@@ -16,6 +16,11 @@ public:
         UPDATE,
         END,
     };
+    enum class GameFlow {
+        Prepare,
+        PLaying,
+        End,
+    };
 
     State GetCurrentState() const { return m_CurrentState; }
 
@@ -26,7 +31,9 @@ public:
 
 private:
     State m_CurrentState = State::START;
+    GameFlow m_GameFlow = GameFlow::Prepare;
 
+    void SetGameFlow(GameFlow gameFlow) { m_GameFlow = gameFlow; }
     // std::shared_ptr<Giraffe> m_Giraffe = std::make_shared<Giraffe>();
     // std::shared_ptr<TestObject> test;
     void
@@ -43,6 +50,8 @@ private:
                        std::pmr::vector<std::shared_ptr<Arm>> arm,
                        std::pmr::vector<std::shared_ptr<Box>> box);
     void PlateMove(std::pmr::vector<std::shared_ptr<Plate>> plate);
+    std::shared_ptr<Button> StartButton = std::make_shared<Button>();
+    std::shared_ptr<Button> ResetButton = std::make_shared<Button>();
 };
 
 #endif

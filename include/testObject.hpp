@@ -4,6 +4,7 @@
 
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
+#include "Util/Input.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Time.hpp"
 #include <cmath>
@@ -39,6 +40,38 @@ inline float DirectionToAngle(Direction direction) {
 inline glm::vec2 AngleToVec2(float angle) {
     return {cos(angle / 180 * acos(-1)), sin(angle / 180 * acos(-1))};
 }
+
+class Button : public Util::GameObject {
+    bool trigger = false;
+
+public:
+    void Start() override {
+        SetDrawable(
+            std::make_unique<Util::Image>("../assets/sprites/range_red.bmp"));
+    };
+    void SetImage(std::shared_ptr<Util::Image> image) { SetDrawable(image); }
+    void SetPostion(const glm::vec2 &position) {
+        m_Transform.translation = position;
+    };
+    void SetScale(const glm::vec2 &scale) { m_Transform.scale = scale; };
+    void SetTrigger(bool b) { trigger = b; }
+    bool GetTrigger() { return trigger; }
+    void Update(const Util::Transform &transform = Util::Transform()) override {
+        if (!m_Visible)
+            return;
+        auto cursorPos = Util::Input::GetCursorPosition();
+        glm::vec2 p1 = {m_Transform.translation.x - GetScaledSize().x / 2,
+                        m_Transform.translation.y - GetScaledSize().y / 2};
+        glm::vec2 p2 = {m_Transform.translation.x + GetScaledSize().x / 2,
+                        m_Transform.translation.y + GetScaledSize().y / 2};
+        auto isIn = cursorPos.x > p1.x && cursorPos.x < p2.x &&
+                    cursorPos.y > p1.y && cursorPos.y < p2.y;
+        if (isIn && Util::Input::IsLButtonPressed()) {
+            // OnClick();
+            trigger = true;
+        }
+    }
+};
 class Component : public Util::GameObject {
     int m_id;
 

@@ -15,10 +15,21 @@
 #include <spdlog/spdlog.h>
 #include <vector>
 
-// TODO conveyor know next and precius
-// TODO box
-// TODO map editor
+// gamejam
 // TODO gameflow
+// start box
+//      reset button
+//      start button
+//      end detection
+//          end box count > level need in time
+//      delete endbox to end game
+
+// click to delete
+// map design
+
+// feature
+// TODO conveyor know next and precius
+// TODO map editor
 
 enum class MapObjectType { ARM, CONVERYOR, BOX, NONE };
 struct MapObject {
@@ -36,8 +47,7 @@ void App::Start() {
                 Direction::RIGHT,
             },
             {
-                MapObjectType::CONVERYOR,
-                Direction::UP,
+                MapObjectType::BOX,
             },
             {
                 MapObjectType::CONVERYOR,
@@ -55,7 +65,7 @@ void App::Start() {
             },
             {
                 MapObjectType::ARM,
-                Direction::UP,
+                Direction::DOWN,
             },
             {
                 MapObjectType::ARM,
@@ -131,6 +141,14 @@ void App::Start() {
                 auto f = Factory<Box>::GetInstance();
                 auto go = f->Create();
                 go->SetPostion({x * gridWidth, y * gridWidth});
+                auto pf = Factory<Plate>::GetInstance();
+                for (int iii = 0; iii < 50; iii++) {
+                    auto plate = pf->Create();
+                    plate->SetPostion(go->GetPostion());
+                    plate->SetScale(gridWidth / plate->GetScaledSize());
+                    plate->SetZIndex(5);
+                    go->PutIn(plate);
+                }
                 go->SetScale(gridWidth / go->GetScaledSize());
             }
 
@@ -144,30 +162,76 @@ void App::Start() {
     LOG_DEBUG(DirectionToAngle(Direction::DOWN));
     LOG_DEBUG(DirectionToAngle(Direction::RIGHT));
     LOG_DEBUG(DirectionToAngle(Direction::LEFT));
+    StartButton->Start();
+    ResetButton->Start();
+    StartButton->SetPostion({5 * gridWidth, 5 * gridWidth});
+    ResetButton->SetPostion({5 * gridWidth, 4 * gridWidth});
+    StartButton->SetScale(gridWidth / StartButton->GetScaledSize());
+    ResetButton->SetScale(gridWidth / ResetButton->GetScaledSize());
+    StartButton->SetImage(
+        std::make_unique<Util::Image>("../assets/sprites/triangle.bmp"));
+    ResetButton->SetImage(
+        std::make_unique<Util::Image>("../assets/sprites/rotate.bmp"));
 }
 
 void App::Update() {
-    // test->AddChild(m_Giraffe);
+    switch (m_GameFlow) {
 
+    case GameFlow::Prepare:
+        StartButton->Update();
+        if (StartButton->GetTrigger()) {
+            m_GameFlow = GameFlow::PLaying;
+            StartButton->SetTrigger(false);
+        }
+        StartButton->Draw();
+        ResetButton->Update();
+        if (ResetButton->GetTrigger()) {
+            m_GameFlow = GameFlow::Prepare;
+            ResetButton->SetTrigger(false);
+        }
+        ResetButton->Draw();
+        WorldFactory::Draw();
+        break;
+    case GameFlow::PLaying:
+        WorldFactory::Update();
+        ConveyorCarryPlate(Factory<Plate>::GetInstance()->GetList(),
+                           Factory<Conveyor>::GetInstance()->GetList());
+        ArmCarryPlate(Factory<Plate>::GetInstance()->GetList(),
+                      Factory<Arm>::GetInstance()->GetList(),
+                      Factory<Box>::GetInstance()->GetList());
+        ArmCarrying(Factory<Arm>::GetInstance()->GetList());
+        ArmReturning(Factory<Arm>::GetInstance()->GetList());
+        PlateWaitting(Factory<Plate>::GetInstance()->GetList(),
+                      Factory<Arm>::GetInstance()->GetList(),
+                      Factory<Box>::GetInstance()->GetList());
+        PlateMove(Factory<Plate>::GetInstance()->GetList());
+        WorldFactory::Draw();
+        break;
+    case GameFlow::End:
+        WorldFactory::Draw();
+        break;
+    }
+
+#pragma region framework
     auto cursorPos = Util::Input::GetCursorPosition();
     if (Util::Input::IsLButtonPressed()) {
-        LOG_DEBUG("Left button pressed");
-        auto f = Factory<Plate>::GetInstance();
-        auto go = f->Create();
-        auto t = round(cursorPos / gridWidth) * gridWidth;
-        go->SetPostion(t);
-        go->SetScale(gridWidth / go->GetScaledSize());
-        go->SetZIndex(5);
-        LOG_DEBUG("MyGo: {}", f->GetList().size());
+        // LOG_DEBUG("Left button pressed");
+        // auto f = Factory<Plate>::GetInstance();
+        // auto go = f->Create();
+        // auto t = round(cursorPos / gridWidth) * gridWidth;
+        // go->SetPostion(t);
+        // go->SetScale(gridWidth / go->GetScaledSize());
+        // go->SetZIndex(5);
+        // LOG_DEBUG("MyGo: {}", f->GetList().size());
     }
     if (Util::Input::IsRButtonPressed()) {
-        auto f = Factory<Arm>::GetInstance();
-        auto go = f->Create();
-        auto t = round(cursorPos / gridWidth) * gridWidth;
-        go->SetPostion(t);
-        go->SetScale(gridWidth / go->GetScaledSize());
-        go->SetZIndex(5);
-        LOG_DEBUG("MyGo: {}", f->GetList().size());
+        // auto f = Factory<Arm>::GetInstance();
+        // auto go = f->Create();
+        // auto t = round(cursorPos / gridWidth) * gridWidth;
+        // go->SetPostion(t);
+        // go->SetScale(gridWidth / go->GetScaledSize());
+        // go->SetZIndex(5);
+        // LOG_DEBUG("MyGo: {}", f->GetList().size());
         LOG_DEBUG("Right button pressed");
     }
     if (Util::Input::IsMButtonPressed()) {
@@ -194,19 +258,7 @@ void App::Update() {
         LOG_DEBUG("B");
         Util::Input::SetCursorPosition({0.0F, 0.0F});
     }
-    WorldFactory::Update();
-    ConveyorCarryPlate(Factory<Plate>::GetInstance()->GetList(),
-                       Factory<Conveyor>::GetInstance()->GetList());
-    ArmCarryPlate(Factory<Plate>::GetInstance()->GetList(),
-                  Factory<Arm>::GetInstance()->GetList(),
-                  Factory<Box>::GetInstance()->GetList());
-    ArmCarrying(Factory<Arm>::GetInstance()->GetList());
-    ArmReturning(Factory<Arm>::GetInstance()->GetList());
-    PlateWaitting(Factory<Plate>::GetInstance()->GetList(),
-                  Factory<Arm>::GetInstance()->GetList(),
-                  Factory<Box>::GetInstance()->GetList());
-    PlateMove(Factory<Plate>::GetInstance()->GetList());
-    WorldFactory::Draw();
+#pragma endregion
 
     // m_Giraffe->Update();
 }
