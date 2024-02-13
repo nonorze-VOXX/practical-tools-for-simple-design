@@ -87,6 +87,7 @@ public:
     void SetScale(const glm::vec2 &scale);
     void SetActive(bool b) { active = b; }
     bool GetActive() { return active; }
+    void ToggleActive() { active = !active; }
     int GetId() { return m_id; }
     void Update(const Util::Transform &transform = Util::Transform()) override {
     }

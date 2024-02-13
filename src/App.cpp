@@ -134,8 +134,30 @@ void App::Start() {
 }
 
 void App::Update() {
+    auto cursorPos = Util::Input::GetCursorPosition();
     switch (m_GameFlow) {
     case GameFlow::Prepare:
+        if (Util::Input::IsLButtonPressed()) {
+            auto girdPos = round(cursorPos / gridWidth) * gridWidth;
+            for (auto &go : Factory<Conveyor>::GetInstance()->GetList()) {
+                if ((go->GetPostion()) == (girdPos)) {
+                    go->ToggleActive();
+                    LOG_DEBUG("Conveyor active toggle");
+                }
+            }
+            for (auto &go : Factory<Arm>::GetInstance()->GetList()) {
+                if ((go->GetPostion()) == (girdPos)) {
+                    go->ToggleActive();
+                    LOG_DEBUG("arm active toggle");
+                }
+            }
+            for (auto &go : Factory<Box>::GetInstance()->GetList()) {
+                if ((go->GetPostion()) == (girdPos)) {
+                    go->ToggleActive();
+                    LOG_DEBUG("box active toggle");
+                }
+            }
+        }
         StartButton->Update();
         if (StartButton->GetTrigger()) {
             m_GameFlow = GameFlow::PLaying;
@@ -184,17 +206,6 @@ void App::Update() {
     }
 
 #pragma region framework
-    auto cursorPos = Util::Input::GetCursorPosition();
-    if (Util::Input::IsLButtonPressed()) {
-        // LOG_DEBUG("Left button pressed");
-        // auto f = Factory<Plate>::GetInstance();
-        // auto go = f->Create();
-        // auto t = round(cursorPos / gridWidth) * gridWidth;
-        // go->SetPostion(t);
-        // go->SetScale(gridWidth / go->GetScaledSize());
-        // go->SetZIndex(5);
-        // LOG_DEBUG("MyGo: {}", f->GetList().size());
-    }
     if (Util::Input::IsRButtonPressed()) {
         // auto f = Factory<Arm>::GetInstance();
         // auto go = f->Create();
@@ -268,6 +279,9 @@ void App::ArmCarryPlate(std::pmr::vector<std::shared_ptr<Plate>> plate,
         if (c->GetState() != ArmState::IDLE)
             continue;
         for (auto &b : box) {
+            if (!b->GetActive()) {
+                continue;
+            }
             if (b->GetCarryingCount() == 0) {
                 continue;
             }
