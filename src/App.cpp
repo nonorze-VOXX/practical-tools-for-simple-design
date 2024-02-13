@@ -35,7 +35,7 @@ struct MapObject {
 std::pmr::vector<std::vector<MapObject>> map1{
 {{MapObjectType::BOX},{ MapObjectType::ARM, Direction::RIGHT, }, { MapObjectType::CONVERYOR, Direction::RIGHT, }, { MapObjectType::CONVERYOR,Direction::RIGHT }, { MapObjectType::CONVERYOR, Direction::RIGHT, }},
 { {MapObjectType::NONE},{MapObjectType::NONE}, { MapObjectType::NONE, Direction::DOWN, }, { MapObjectType::ARM, Direction::DOWN, }, { MapObjectType::ARM, Direction::DOWN, }},
-{ {MapObjectType::NONE},{MapObjectType::NONE},{ MapObjectType::NONE, Direction::RIGHT, }, { MapObjectType::BOX }, { MapObjectType::GOAL } }
+{ {MapObjectType::NONE},{MapObjectType::NONE},{ MapObjectType::NONE, Direction::RIGHT, }, { MapObjectType::NONE }, { MapObjectType::GOAL } }
 };
 std::pmr::vector<std::vector<MapObject>> map2{
 { {MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::BOX},{MapObjectType::NONE},{MapObjectType::NONE},},
@@ -43,6 +43,13 @@ std::pmr::vector<std::vector<MapObject>> map2{
 { {MapObjectType::BOX},{MapObjectType::ARM,Direction::RIGHT},{MapObjectType::CONVERYOR,Direction::RIGHT},{MapObjectType::CONVERYOR,Direction ::RIGHT},{MapObjectType::CONVERYOR ,Direction::RIGHT},},
 { {MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::ARM, Direction::DOWN},},
 { {MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::GOAL},},
+};
+std::pmr::vector<std::vector<MapObject>> map3{
+{ {MapObjectType::BOX},{MapObjectType::NONE},{MapObjectType::CONVERYOR,Direction::RIGHT},{MapObjectType::CONVERYOR,Direction::DOWN},{MapObjectType::BOX},},
+{ {MapObjectType::ARM,Direction::DOWN},{MapObjectType::NONE},{MapObjectType::ARM,Direction::UP},{MapObjectType::CONVERYOR,Direction::DOWN},{MapObjectType::ARM,Direction::DOWN},},
+{ {MapObjectType::CONVERYOR,Direction::RIGHT},{MapObjectType::CONVERYOR,Direction::RIGHT},{MapObjectType::CONVERYOR,Direction::DOWN},{MapObjectType::CONVERYOR,Direction::LEFT},{MapObjectType::CONVERYOR,Direction::LEFT},},
+{ {MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::ARM,Direction::DOWN},{MapObjectType::NONE},{MapObjectType::NONE},},
+{ {MapObjectType::NONE},{MapObjectType::NONE},{MapObjectType::GOAL},{MapObjectType::NONE},{MapObjectType::NONE},},
 };
 std::pmr::vector<std::vector<MapObject>> map0{
 };
@@ -54,6 +61,9 @@ void App::GenerateMap(int level) {
     }
     if (level == 1) {
         map = map2;
+    }
+    if (level == 2) {
+        map = map3;
     }
 
     for (int i = 0; i < static_cast<int>(map.size()); i++) {
@@ -136,7 +146,7 @@ void App::Start() {
         "../assets/fonts/Inter.ttf", gridWidth, ">>>"));
     tutorioText->SetImage(std::make_unique<Util::Text>(
         "../assets/fonts/Inter.ttf", gridWidth / 2,
-        "LMB to some object to disable,\n one more to enable.\n 10 giraffe "
+        "LMB to some object to disable,\n one more to enable.\n all giraffe "
         "need to go in red circle."));
 }
 
@@ -246,9 +256,10 @@ void App::Update() {
                 totalGoalPlate += goalbox->GetCarryingCount();
         }
         if ((level == 0 && totalGoalPlate >= 10) ||
-            (level == 1 && totalGoalPlate >= 20)) {
+            (level == 1 && totalGoalPlate >= 20) ||
+            (level == 2 && totalGoalPlate >= 20)) {
             m_GameFlow = GameFlow::End;
-            if (level == 1) {
+            if (level == 2) {
                 NextLevelButton->SetImage(std::make_unique<Util::Text>(
                     "../assets/fonts/Inter.ttf", gridWidth * 2,
                     "Thank you for playing. "));
@@ -262,7 +273,7 @@ void App::Update() {
     }
     case GameFlow::End:
         NextLevelButton->Draw();
-        if (level == 2) {
+        if (level == 3) {
             return;
         }
         NextLevelButton->Update();
@@ -433,10 +444,10 @@ void App::PlateMove(std::pmr::vector<std::shared_ptr<Plate>> plate) {
 
             auto p1Pos = (p1->GetPostion() + p1->GetDeltaMove());
             auto p2Pos = (p2->GetPostion());
-            bool isin = p1Pos.x < p2Pos.x + gridWidth &&
-                        p1Pos.x + gridWidth > p2Pos.x &&
-                        p1Pos.y < p2Pos.y + gridWidth &&
-                        p1Pos.y + gridWidth > p2Pos.y;
+            bool isin = p1Pos.x < p2Pos.x + gridWidth / 2 &&
+                        p1Pos.x + gridWidth / 2 > p2Pos.x &&
+                        p1Pos.y < p2Pos.y + gridWidth / 2 &&
+                        p1Pos.y + gridWidth / 2 > p2Pos.y;
             if (isin) {
                 collide = true;
                 break;
