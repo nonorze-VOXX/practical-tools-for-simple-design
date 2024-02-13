@@ -126,7 +126,7 @@ void App::Start() {
         "../assets/fonts/Inter.ttf", gridWidth, ">>>"));
     tutorioText->SetImage(std::make_unique<Util::Text>(
         "../assets/fonts/Inter.ttf", gridWidth / 2,
-        "LMB to some object to disable,\n one more to enable.\n All giraffe "
+        "LMB to some object to disable,\n one more to enable.\n 10 giraffe "
         "need to go in red circle."));
 }
 
@@ -230,6 +230,12 @@ void App::Update() {
         }
         if (level == 0 && totalGoalPlate >= 10) {
             m_GameFlow = GameFlow::End;
+            if (level == 0) {
+                NextLevelButton->SetImage(std::make_unique<Util::Text>(
+                    "../assets/fonts/Inter.ttf", gridWidth * 2,
+                    "Thank you for playing. "));
+                NextLevelButton->SetPostion({0, 0});
+            }
         }
 
         WorldFactory::Draw();
