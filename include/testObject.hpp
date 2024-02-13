@@ -75,6 +75,7 @@ public:
 };
 class Component : public Util::GameObject {
     int m_id;
+    bool active = true;
 
 public:
     void SetId(int id) { m_id = id; }
@@ -84,6 +85,8 @@ public:
     };
     const glm::vec2 GetPostion() { return m_Transform.translation; };
     void SetScale(const glm::vec2 &scale);
+    void SetActive(bool b) { active = b; }
+    bool GetActive() { return active; }
     int GetId() { return m_id; }
     void Update(const Util::Transform &transform = Util::Transform()) override {
     }

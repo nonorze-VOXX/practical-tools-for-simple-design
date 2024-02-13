@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <glm/fwd.hpp>
 #include <memory>
@@ -120,20 +121,19 @@ void App::Start() {
     NextLevelButton->Start();
     StartButton->SetPostion({5 * gridWidth, 5 * gridWidth});
     ResetButton->SetPostion({5 * gridWidth, 4 * gridWidth});
-    NextLevelButton->SetPostion({5 * gridWidth, 0 * gridWidth});
+    NextLevelButton->SetPostion({5 * gridWidth, 3 * gridWidth});
     StartButton->SetScale(gridWidth / StartButton->GetScaledSize());
     ResetButton->SetScale(gridWidth / ResetButton->GetScaledSize());
-    // ResetButton->SetScale(gridWidth / ResetButton->GetScaledSize());
+    NextLevelButton->SetScale(gridWidth / ResetButton->GetScaledSize());
     StartButton->SetImage(
         std::make_unique<Util::Image>("../assets/sprites/triangle.bmp"));
     ResetButton->SetImage(
         std::make_unique<Util::Image>("../assets/sprites/rotate.bmp"));
-    ResetButton->SetImage(std::make_unique<Util::Text>(
+    NextLevelButton->SetImage(std::make_unique<Util::Text>(
         "../assets/fonts/Inter.ttf", gridWidth, ">>>"));
 }
 
 void App::Update() {
-    ResetButton->Draw();
     switch (m_GameFlow) {
     case GameFlow::Prepare:
         StartButton->Update();
@@ -168,13 +168,14 @@ void App::Update() {
             if (goalbox->IsGoal())
                 totalGoalPlate += goalbox->GetCarryingCount();
         }
-        if (level == 0 && totalGoalPlate >= 10) {
+        if (level == 0 && totalGoalPlate >= 20) {
             m_GameFlow = GameFlow::End;
         }
         WorldFactory::Draw();
         break;
     }
     case GameFlow::End:
+        NextLevelButton->Draw();
 
         WorldFactory::Draw();
         break;
@@ -245,6 +246,9 @@ void App::ConveyorCarryPlate(
         if (p->GetState() != PlateState::IDLE)
             continue;
         for (auto &c : converyor) {
+            if (!c->GetActive()) {
+                continue;
+            }
             auto platePos = PositionToGrid(p->GetPostion());
             auto converyorPos = PositionToGrid(c->GetPostion());
             if (platePos == converyorPos) {
@@ -258,6 +262,9 @@ void App::ArmCarryPlate(std::pmr::vector<std::shared_ptr<Plate>> plate,
                         std::pmr::vector<std::shared_ptr<Arm>> arm,
                         std::pmr::vector<std::shared_ptr<Box>> box) {
     for (auto &c : arm) {
+        if (!c->GetActive()) {
+            continue;
+        }
         if (c->GetState() != ArmState::IDLE)
             continue;
         for (auto &b : box) {
@@ -295,6 +302,9 @@ void App::ArmCarryPlate(std::pmr::vector<std::shared_ptr<Plate>> plate,
 }
 void App::ArmCarrying(std::pmr::vector<std::shared_ptr<Arm>> arm) {
     for (auto &a : arm) {
+        if (!a->GetActive()) {
+            continue;
+        }
         if (a->GetState() != ArmState::CARRYING) {
             continue;
         }
@@ -309,6 +319,9 @@ void App::ArmCarrying(std::pmr::vector<std::shared_ptr<Arm>> arm) {
 }
 void App::ArmReturning(std::pmr::vector<std::shared_ptr<Arm>> arm) {
     for (auto &a : arm) {
+        if (!a->GetActive()) {
+            continue;
+        }
         if (a->GetState() != ArmState::RETURNING) {
             continue;
         }
@@ -351,8 +364,14 @@ void App::PlateWaitting(std::pmr::vector<std::shared_ptr<Plate>> plate,
     for (auto &c : arm) {
         if (c->GetState() != ArmState::WAITING)
             continue;
+        if (!c->GetActive()) {
+            continue;
+        }
         bool isGroundHaveBox = false;
         for (auto &b : box) {
+            if (!b->GetActive()) {
+                continue;
+            }
             auto boxPOs = PositionToGrid(b->GetPostion());
             auto armPos = PositionToGrid(c->GetHandPosition());
             if (boxPOs == armPos) {
