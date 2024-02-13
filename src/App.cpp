@@ -31,7 +31,7 @@
 // TODO conveyor know next and precius
 // TODO map editor
 
-enum class MapObjectType { ARM, CONVERYOR, BOX, NONE };
+enum class MapObjectType { ARM, CONVERYOR, BOX, NONE, GOAL };
 struct MapObject {
     MapObjectType type;
     Direction direction;
@@ -39,23 +39,28 @@ struct MapObject {
 // clang-format off
 std::pmr::vector<std::vector<MapObject>> map1{
 {{MapObjectType::BOX},{ MapObjectType::ARM, Direction::RIGHT, }, { MapObjectType::CONVERYOR, Direction::RIGHT, }, { MapObjectType::CONVERYOR,Direction::RIGHT }, { MapObjectType::CONVERYOR, Direction::RIGHT, }},
-{ {MapObjectType::NONE},{MapObjectType::NONE}, { MapObjectType::NONE, Direction::DOWN, }, { MapObjectType::ARM, Direction::DOWN, }, { MapObjectType::ARM, Direction::DOWN, }},
-{ {MapObjectType::NONE},{MapObjectType::NONE},{ MapObjectType::NONE, Direction::RIGHT, }, { MapObjectType::BOX }, { MapObjectType::BOX } }
+{ {MapObjectType::NONE},{MapObjectType::NONE}, { MapObjectType::NONE, Direction::DOWN, }, { MapObjectType::NONE, Direction::DOWN, }, { MapObjectType::ARM, Direction::DOWN, }},
+{ {MapObjectType::NONE},{MapObjectType::NONE},{ MapObjectType::NONE, Direction::RIGHT, }, { MapObjectType::BOX }, { MapObjectType::GOAL } }
 };
-std::pmr::vector<std::vector<MapObject>> map2{
+std::pmr::vector<std::vector<MapObject>> map0{
 { { MapObjectType::CONVERYOR, Direction::RIGHT, }, { MapObjectType::BOX, }, { MapObjectType::CONVERYOR, Direction::LEFT, }, { MapObjectType::CONVERYOR, Direction::LEFT, }, }, 
 { { MapObjectType::ARM, Direction::RIGHT, }, { MapObjectType::ARM, Direction::DOWN, }, { MapObjectType::ARM, Direction::LEFT, }, { MapObjectType::ARM, Direction::DOWN, }, }, 
 { { MapObjectType::CONVERYOR, Direction::RIGHT, }, { MapObjectType::BOX, }, { MapObjectType::CONVERYOR, Direction::LEFT, }, { MapObjectType::CONVERYOR, Direction::DOWN, }, },
 { { MapObjectType::CONVERYOR, Direction::DOWN, }, { MapObjectType::CONVERYOR, Direction::UP, }, { MapObjectType::CONVERYOR, Direction::RIGHT, }, { MapObjectType::CONVERYOR, Direction::DOWN, }, },
 };
 // clang-format on
-void App::GenerateMap() {
-    for (int i = 0; i < static_cast<int>(map1.size()); i++) {
-        for (int ii = 0; ii < static_cast<int>(map1[i].size()); ii++) {
-            auto x = static_cast<int>(-(map1[i].size() - 1) / 2 + ii);
-            auto y = -1 * static_cast<int>(-(map1.size() - 1) / 2 + i);
+void App::GenerateMap(int level) {
+    auto map = map0;
+    if (level == 0) {
+        map = map1;
+    }
 
-            switch (map1.at(i).at(ii).type) {
+    for (int i = 0; i < static_cast<int>(map.size()); i++) {
+        for (int ii = 0; ii < static_cast<int>(map[i].size()); ii++) {
+            auto x = static_cast<int>(-(map[i].size() - 1) / 2 + ii);
+            auto y = -1 * static_cast<int>(-(map.size() - 1) / 2 + i);
+
+            switch (map.at(i).at(ii).type) {
             case MapObjectType::NONE:
                 continue;
             case MapObjectType::ARM: {
@@ -63,14 +68,14 @@ void App::GenerateMap() {
                 auto go = f->Create();
                 go->SetPostion({x * gridWidth, y * gridWidth});
                 go->SetScale(gridWidth / go->GetScaledSize());
-                go->SetDirection(map1.at(i).at(ii).direction);
+                go->SetDirection(map.at(i).at(ii).direction);
             } break;
             case MapObjectType::CONVERYOR: {
                 auto f = Factory<Conveyor>::GetInstance();
                 auto go = f->Create();
                 go->SetPostion({x * gridWidth, y * gridWidth});
                 go->SetScale(gridWidth / go->GetScaledSize());
-                go->SetDirection(map1.at(i).at(ii).direction);
+                go->SetDirection(map.at(i).at(ii).direction);
             }
 
             break;
@@ -91,13 +96,22 @@ void App::GenerateMap() {
             }
 
             break;
+            case MapObjectType::GOAL: {
+                auto f = Factory<Box>::GetInstance();
+                auto go = f->Create();
+                go->SetGoal(true);
+                go->SetPostion({x * gridWidth, y * gridWidth});
+                go->SetScale(gridWidth / go->GetScaledSize());
+            }
+
+            break;
             }
         }
     }
 }
 void App::Start() {
 
-    GenerateMap();
+    GenerateMap(level);
 
     m_CurrentState = State::UPDATE;
     StartButton->Start();
@@ -114,7 +128,6 @@ void App::Start() {
 
 void App::Update() {
     switch (m_GameFlow) {
-
     case GameFlow::Prepare:
         StartButton->Update();
         if (StartButton->GetTrigger()) {
@@ -124,7 +137,7 @@ void App::Update() {
         StartButton->Draw();
         WorldFactory::Draw();
         break;
-    case GameFlow::PLaying:
+    case GameFlow::PLaying: {
         ResetButton->Update();
         if (ResetButton->GetTrigger()) {
             m_GameFlow = GameFlow::Prepare;
@@ -143,10 +156,22 @@ void App::Update() {
                       Factory<Arm>::GetInstance()->GetList(),
                       Factory<Box>::GetInstance()->GetList());
         PlateMove(Factory<Plate>::GetInstance()->GetList());
+        auto totalGoalPlate = 0;
+        for (auto goalbox : Factory<Box>::GetInstance()->GetList()) {
+            if (goalbox->IsGoal())
+                totalGoalPlate += goalbox->GetCarryingCount();
+        }
+        if (level == 0 && totalGoalPlate >= 10) {
+            m_GameFlow = GameFlow::End;
+        }
         WorldFactory::Draw();
         break;
+    }
     case GameFlow::End:
+
         WorldFactory::Draw();
+        break;
+    default:
         break;
     }
 

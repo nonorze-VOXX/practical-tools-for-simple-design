@@ -47,7 +47,7 @@ class Button : public Util::GameObject {
 public:
     void Start() override {
         SetDrawable(
-            std::make_unique<Util::Image>("../assets/sprites/range_red.bmp"));
+            std::make_unique<Util::Image>("../assets/sprites/circle.bmp"));
     };
     void SetImage(std::shared_ptr<Util::Image> image) { SetDrawable(image); }
     void SetPostion(const glm::vec2 &position) {
@@ -263,6 +263,8 @@ class Box : public Component {
     std::pmr::vector<std::shared_ptr<Plate>> m_context =
         std::pmr::vector<std::shared_ptr<Plate>>();
 
+    bool isGoal = false;
+
 public:
     void Start() override {
         SetDrawable(
@@ -276,5 +278,11 @@ public:
         return result;
     }
     int GetCarryingCount() { return m_context.size(); }
+    void SetGoal(bool b) {
+        isGoal = b;
+        SetDrawable(
+            std::make_unique<Util::Image>("../assets/sprites/goal.bmp"));
+    }
+    bool IsGoal() { return isGoal; }
 };
 #endif

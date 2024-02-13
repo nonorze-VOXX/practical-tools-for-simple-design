@@ -52,7 +52,8 @@ private:
     void PlateMove(std::pmr::vector<std::shared_ptr<Plate>> plate);
     std::shared_ptr<Button> StartButton = std::make_shared<Button>();
     std::shared_ptr<Button> ResetButton = std::make_shared<Button>();
-    void GenerateMap();
+    void GenerateMap(int level);
+    int level = 0;
 };
 
 #endif
