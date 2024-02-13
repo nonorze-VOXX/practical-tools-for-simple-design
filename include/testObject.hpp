@@ -2,6 +2,7 @@
 #ifndef TEST_OBJECT_HPP
 #define TEST_OBJECT_HPP
 
+#include "Core/Drawable.hpp"
 #include "Util/GameObject.hpp"
 #include "Util/Image.hpp"
 #include "Util/Input.hpp"
@@ -49,7 +50,7 @@ public:
         SetDrawable(
             std::make_unique<Util::Image>("../assets/sprites/circle.bmp"));
     };
-    void SetImage(std::shared_ptr<Util::Image> image) { SetDrawable(image); }
+    void SetImage(std::shared_ptr<Core::Drawable> image) { SetDrawable(image); }
     void SetPostion(const glm::vec2 &position) {
         m_Transform.translation = position;
     };

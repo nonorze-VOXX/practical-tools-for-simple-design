@@ -5,6 +5,7 @@
 #include "Util/Keycode.hpp"
 #include "Util/Logger.hpp"
 
+#include "Util/Text.hpp"
 #include "testObject.hpp"
 #include <algorithm>
 #include <array>
@@ -116,17 +117,23 @@ void App::Start() {
     m_CurrentState = State::UPDATE;
     StartButton->Start();
     ResetButton->Start();
+    NextLevelButton->Start();
     StartButton->SetPostion({5 * gridWidth, 5 * gridWidth});
     ResetButton->SetPostion({5 * gridWidth, 4 * gridWidth});
+    NextLevelButton->SetPostion({5 * gridWidth, 0 * gridWidth});
     StartButton->SetScale(gridWidth / StartButton->GetScaledSize());
     ResetButton->SetScale(gridWidth / ResetButton->GetScaledSize());
+    // ResetButton->SetScale(gridWidth / ResetButton->GetScaledSize());
     StartButton->SetImage(
         std::make_unique<Util::Image>("../assets/sprites/triangle.bmp"));
     ResetButton->SetImage(
         std::make_unique<Util::Image>("../assets/sprites/rotate.bmp"));
+    ResetButton->SetImage(std::make_unique<Util::Text>(
+        "../assets/fonts/Inter.ttf", gridWidth, ">>>"));
 }
 
 void App::Update() {
+    ResetButton->Draw();
     switch (m_GameFlow) {
     case GameFlow::Prepare:
         StartButton->Update();
